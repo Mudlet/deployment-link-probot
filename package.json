@@ -1,7 +1,7 @@
 {
-  "name": "new-issue-welcome",
+  "name": "deployment-link-probot",
   "version": "1.0.0",
-  "description": "my test bot",
+  "description": "Keep links to deployments of test versions.",
   "main": "index.js",
   "dependencies": {
     "github": "^14.0.0",
@@ -33,6 +33,6 @@
       "mocha"
     ]
   },
-  "author": "hiimbex",
-  "license": "ISC"
+  "author": "keneanung",
+  "license": "MIT"
 }
