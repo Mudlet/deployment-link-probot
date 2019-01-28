@@ -113,10 +113,7 @@ const setDeployUrl = async (github, githubStatusPayload, getOs, getPassedJobs, g
       for(let i = 0; i < passedJobs.length; i++) {
         const job = passedJobs[i]
         const log = await getLog(job)
-        const success = updateCommentUrlFromLog(getOs(job), log, comment)
-        if(!success){
-          return
-        }
+        updateCommentUrlFromLog(getOs(job), log, comment)
       }
       updateDeploymentCommentBody(
         githubStatusPayload.repository.owner.login,
@@ -142,9 +139,9 @@ const createPrCommentForUs = async (github, payload) => {
     number: payload.number,
     body: "Hey there. Thank you for your contribution :star2:\n\n" +
           "Here's where to download a test version:\n" +
-          "- https://transfer.sh (linux)\n" +
-          "- https://transfer.sh (osx)\n" +
-          "- https://appveyor.com (windows)"
+          "- (coming soon) (linux)\n" +
+          "- (coming soon) (osx)\n" +
+          "- (coming soon) (windows)"
   })
 }
 
