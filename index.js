@@ -137,11 +137,13 @@ const createPrCommentForUs = async (github, payload) => {
     owner: payload.repository.owner.login,
     repo: payload.repository.name,
     number: payload.number,
-    body: "Hey there. Thank you for your contribution :star2:\n\n" +
-          "Here's where to download a test version:\n" +
+    body: "Hey there! Thanks for helping Mudlet improve. :star2:\n\n" +
+          "You can find the test versions here:\n" +
           "- (coming soon) (linux)\n" +
           "- (coming soon) (osx)\n" +
-          "- (coming soon) (windows)"
+          "- (coming soon) (windows)\n\n" +
+          "No need to install anything - just unzip and run.\n" +
+          "Let us know if it works well, and if it doesn't, please give details."
   })
 }
 
