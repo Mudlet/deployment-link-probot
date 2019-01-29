@@ -73,7 +73,7 @@ const updateCommentUrlFromLog = (os,log, comment) => {
   }
   const deployUrl = matches[1]
   application.log(`Deployed the output for ${os} to: ${deployUrl}`)
-  comment.body = comment.body.replace(new RegExp(`- .+? \\(${os}\\)`), `- ${deployUrl} (${os})`)
+  comment.body = comment.body.replace(new RegExp(`- ${os}: .+?`), `- ${os}: ${deployUrl}`)
   return true
 }
 
@@ -138,10 +138,10 @@ const createPrCommentForUs = async (github, payload) => {
     repo: payload.repository.name,
     number: payload.number,
     body: "Hey there! Thanks for helping Mudlet improve. :star2:\n\n" +
-          "You can find the test versions here:\n" +
-          "- (coming soon) (linux)\n" +
-          "- (coming soon) (osx)\n" +
-          "- (coming soon) (windows)\n\n" +
+          "You can directly test the changes here:\n" +
+          "- linux: (the download link will be here in a few minutes)\n" +
+          "- osx: (the download link will be here in a few minutes)\n" +
+          "- windows: (the download link will be here in a few minutes)\n\n" +
           "No need to install anything - just unzip and run.\n" +
           "Let us know if it works well, and if it doesn't, please give details."
   })
