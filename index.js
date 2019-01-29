@@ -64,7 +64,7 @@ const getDeploymentComment = async (repositoryOwner, repositoryName, prNumber, g
   return _.filter(commentAnswer.data, comment => comment.user.login === "add-deployment-links[bot]")[0]
 }
 
-const updateCommentUrlFromLog = (os,log, comment) => {
+const updateCommentUrlFromLog = (os, log, comment) => {
   const matches = log.match(/^(?:\s*\[\d{2,}:\d{2}:\d{2}\] )?Deployed the output to (.+)$/m)
   if(!matches) {
     application.log("Couldn't find the deployment echo.")
@@ -113,7 +113,8 @@ const setDeployUrl = async (github, githubStatusPayload, getOs, getPassedJobs, g
       for(let i = 0; i < passedJobs.length; i++) {
         const job = passedJobs[i]
         const log = await getLog(job)
-        updateCommentUrlFromLog(getOs(job), log, comment)
+        const os = getOs(job).toUpperCase()
+        updateCommentUrlFromLog(os, log, comment)
       }
       updateDeploymentCommentBody(
         githubStatusPayload.repository.owner.login,
@@ -139,9 +140,9 @@ const createPrCommentForUs = async (github, payload) => {
     number: payload.number,
     body: "Hey there! Thanks for helping Mudlet improve. :star2:\n\n" +
           "You can directly test the changes here:\n" +
-          "- linux: (the download link will be here in a few minutes)\n" +
-          "- osx: (the download link will be here in a few minutes)\n" +
-          "- windows: (the download link will be here in a few minutes)\n\n" +
+          "- LINUX: (the download link will be here in a few minutes)\n" +
+          "- OSX: (the download link will be here in a few minutes)\n" +
+          "- WINDOWS: (the download link will be here in a few minutes)\n\n" +
           "No need to install anything - just unzip and run.\n" +
           "Let us know if it works well, and if it doesn't, please give details."
   })
