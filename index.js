@@ -73,7 +73,7 @@ const updateCommentUrlFromLog = (os, log, comment) => {
   }
   const deployUrl = matches[1]
   application.log(`Deployed the output for ${os} to: ${deployUrl}`)
-  comment.body = comment.body.replace(new RegExp(`- ${os}: .+?`), `- ${os}: ${deployUrl}`)
+  comment.body = comment.body.replace(new RegExp(`- ${os}: .+`), `- ${os}: ${deployUrl}`)
   return true
 }
 
