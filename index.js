@@ -113,8 +113,7 @@ const setDeployUrl = async (github, githubStatusPayload, getOs, getPassedJobs, g
       for(let i = 0; i < passedJobs.length; i++) {
         const job = passedJobs[i]
         const log = await getLog(job)
-        const os = getOs(job).toUpperCase()
-        updateCommentUrlFromLog(os, log, comment)
+        updateCommentUrlFromLog(getOs(job), log, comment)
       }
       updateDeploymentCommentBody(
         githubStatusPayload.repository.owner.login,
@@ -140,9 +139,9 @@ const createPrCommentForUs = async (github, payload) => {
     number: payload.number,
     body: "Hey there! Thanks for helping Mudlet improve. :star2:\n\n" +
           "You can directly test the changes here:\n" +
-          "- LINUX: (the download link will be here in a few minutes)\n" +
-          "- OSX: (the download link will be here in a few minutes)\n" +
-          "- WINDOWS: (the download link will be here in a few minutes)\n\n" +
+          "- linux: (link pending, check back soon!)\n" +
+          "- osx: (link pending, check back soon!)\n" +
+          "- windows: (link pending, check back soon!)\n\n" +
           "No need to install anything - just unzip and run.\n" +
           "Let us know if it works well, and if it doesn't, please give details."
   })
