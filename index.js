@@ -64,7 +64,7 @@ const getDeploymentComment = async (repositoryOwner, repositoryName, prNumber, g
   return _.filter(commentAnswer.data, comment => comment.user.login === "add-deployment-links[bot]")[0]
 }
 
-const updateCommentUrlFromLog = (os,log, comment) => {
+const updateCommentUrlFromLog = (os, log, comment) => {
   const matches = log.match(/^(?:\s*\[\d{2,}:\d{2}:\d{2}\] )?Deployed the output to (.+)$/m)
   if(!matches) {
     application.log("Couldn't find the deployment echo.")
@@ -73,7 +73,7 @@ const updateCommentUrlFromLog = (os,log, comment) => {
   }
   const deployUrl = matches[1]
   application.log(`Deployed the output for ${os} to: ${deployUrl}`)
-  comment.body = comment.body.replace(new RegExp(`- .+? \\(${os}\\)`), `- ${deployUrl} (${os})`)
+  comment.body = comment.body.replace(new RegExp(`- ${os}: .+?`), `- ${os}: ${deployUrl}`)
   return true
 }
 
@@ -138,10 +138,10 @@ const createPrCommentForUs = async (github, payload) => {
     repo: payload.repository.name,
     number: payload.number,
     body: "Hey there! Thanks for helping Mudlet improve. :star2:\n\n" +
-          "You can find the test versions here:\n" +
-          "- (coming soon) (linux)\n" +
-          "- (coming soon) (osx)\n" +
-          "- (coming soon) (windows)\n\n" +
+          "You can directly test the changes here:\n" +
+          "- linux: (download pending, check back soon!)\n" +
+          "- osx: (download pending, check back soon!)\n" +
+          "- windows: (download pending, check back soon!)\n\n" +
           "No need to install anything - just unzip and run.\n" +
           "Let us know if it works well, and if it doesn't, please give details."
   })
