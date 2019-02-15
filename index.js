@@ -154,7 +154,7 @@ module.exports = app => {
   application = app
   app.on("status", async context => {
     if(context.payload.context.includes("travis-ci")){
-      setDeployUrl(context.github, context.payload, getTravisOs, getPassedTravisJobs, getTravisLog)
+      setTimeout(() => setDeployUrl(context.github, context.payload, getTravisOs, getPassedTravisJobs, getTravisLog), 10000)
     }else if(context.payload.context.includes("appveyor")){
       setDeployUrl(context.github, context.payload, getAppveyorOs, getPassedAppveyorJobs, getAppveyorLog)
     }
