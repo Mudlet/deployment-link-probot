@@ -143,8 +143,85 @@ const createPrCommentForUs = async (github, payload) => {
           "- osx: (download pending, check back soon!)\n" +
           "- windows: (download pending, check back soon!)\n\n" +
           "No need to install anything - just unzip and run.\n" +
-          "Let us know if it works well, and if it doesn't, please give details."
+          "Let us know if it works well, and if it doesn't, please give details.\n"
+    //+
+    //      payload.pull_request.title === "New Crowdin translations"
+    //      ? "<!-- Begin of translation stats -->\n" +
+    //        "Translation stats\n\n" +
+    //        "calculation pending, check back soon!\n\n" +
+    //        "<!-- End of translation stats -->"
+    //      : ""
   })
+  console.log(commentAnswer)
+}
+
+///////////////////////////////////////////////
+// functions for creating the translation statistics
+///////////////////////////////////////////////
+const translationStatRegex = /^(?<language>\w{2}_\w{2})\t(?<translated>\d+)\t(?<untranslated>\d+)\t\d+\t\d+\t\d+\t(?<percentage>\d+)$/gm
+const translationStatReplacementRegex = new RegExp("<!-- Begin of translation stats -->.+<!-- End of translation stats -->", "gms")
+
+const getTranslationStatsFromTravis = async githubStatusPayload => {
+  const matches = githubStatusPayload.target_url.match("/builds/(\\d+)")
+  const buildId = matches[1]
+  const getTravisBuilds = util.promisify(travis.builds(buildId).get)
+  const builds = await getTravisBuilds()
+  const job = _.filter(builds.jobs, element => element.number === `${builds.build.number}.3`)[0]
+  const prNumber = builds.build.pull_request_number
+  const log = await getTravisLog(job)
+  let translationMatches
+  const translationStats = {}
+  while((translationMatches = translationStatRegex.exec(log)) !== null){
+    translationStats[translationMatches.groups.language] = {
+      translated: translationMatches.groups.translated,
+      untranslated: translationMatches.groups.untranslated,
+      percentage: translationMatches.groups.percentage,
+    }
+  }
+  
+  return { prNumber, translationStats}
+}
+
+const buildTranslationTable = translationStats => {
+  let output = "<!-- Begin of translation stats -->\nTranslation stats\n\n"
+  output += "|language|translated|untranslated|percentage done|\n"
+  output += "|--------|----------|------------|---------------|\n"
+  for(const language of Object.keys(translationStats).sort()){
+    output += `|${language}|${translationStats[language].translated}|${translationStats[language].untranslated}|${translationStats[language].percentage}|\n`
+  }
+  output += "\n<!-- End of translation stats -->"
+  return output
+}
+
+const createTranslationStatistics = async (github, githubStatusPayload) => {
+  if(githubStatusPayload.context.includes("pr")){
+    const { prNumber, translationStats } = await getTranslationStatsFromTravis(githubStatusPayload)
+    
+    if(Object.keys(translationStats).length === 0){
+      return
+    }
+    const output = buildTranslationTable(translationStats)
+    
+    const comment = await getDeploymentComment(
+      githubStatusPayload.repository.owner.login,
+      githubStatusPayload.repository.name,
+      prNumber,
+      github
+    )
+    
+    if(!comment) {
+      application.log("Couldn't find our comment, aborting")
+      return
+    }
+    
+    comment.body = comment.body.replace(translationStatReplacementRegex, output)  // on non-translation PRs, this doesn't replace anything as the block is not added
+    updateDeploymentCommentBody(
+      githubStatusPayload.repository.owner.login,
+      githubStatusPayload.repository.name,
+      comment,
+      github
+    )
+  }
 }
 
 ///////////////////////////////////////////////
@@ -154,7 +231,10 @@ module.exports = app => {
   application = app
   app.on("status", async context => {
     if(context.payload.context.includes("travis-ci")){
-      setTimeout(() => setDeployUrl(context.github, context.payload, getTravisOs, getPassedTravisJobs, getTravisLog), 10000)
+      setTimeout(() => {
+        setDeployUrl(context.github, context.payload, getTravisOs, getPassedTravisJobs, getTravisLog)
+        createTranslationStatistics(context.github, context.payload)
+      }, 10000)
     }else if(context.payload.context.includes("appveyor")){
       setDeployUrl(context.github, context.payload, getAppveyorOs, getPassedAppveyorJobs, getAppveyorLog)
     }
