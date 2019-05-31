@@ -68,7 +68,6 @@ const updateCommentUrlFromLog = (os, log, comment) => {
   const matches = log.match(/^(?:\s*\[\d{2,}:\d{2}:\d{2}\] )?Deployed the output to (.+)$/m)
   if(!matches) {
     application.log("Couldn't find the deployment echo.")
-    application.log(log)
     return false
   }
   const deployUrl = matches[1]
@@ -133,33 +132,32 @@ const createPrCommentForUs = async (github, payload) => {
     return
   }
   application.log("Creating new comment for our use.")
-  const commentAnswer = await github.issues.createComment({
-    owner: payload.repository.owner.login,
-    repo: payload.repository.name,
-    number: payload.number,
-    body: "Hey there! Thanks for helping Mudlet improve. :star2:\n\n" +
+  const body = "Hey there! Thanks for helping Mudlet improve. :star2:\n\n" +
+          "## Test versions\n\n" +
           "You can directly test the changes here:\n" +
           "- linux: (download pending, check back soon!)\n" +
           "- osx: (download pending, check back soon!)\n" +
           "- windows: (download pending, check back soon!)\n\n" +
           "No need to install anything - just unzip and run.\n" +
-          "Let us know if it works well, and if it doesn't, please give details.\n"
-    //+
-    //      payload.pull_request.title === "New Crowdin translations"
-    //      ? "<!-- Begin of translation stats -->\n" +
-    //        "Translation stats\n\n" +
-    //        "calculation pending, check back soon!\n\n" +
-    //        "<!-- End of translation stats -->"
-    //      : ""
+          "Let us know if it works well, and if it doesn't, please give details.\n" +
+          (payload.pull_request.title === "New Crowdin translations"
+          ? "\n" +
+            "## Translation stats\n\n" +
+            "calculation pending, check back soon!\n\n"
+          : "")
+  await github.issues.createComment({
+    owner: payload.repository.owner.login,
+    repo: payload.repository.name,
+    number: payload.number,
+    body: body
   })
-  console.log(commentAnswer)
 }
 
 ///////////////////////////////////////////////
 // functions for creating the translation statistics
 ///////////////////////////////////////////////
 const translationStatRegex = /^(?<language>\w{2}_\w{2})\t(?<translated>\d+)\t(?<untranslated>\d+)\t\d+\t\d+\t\d+\t(?<percentage>\d+)$/gm
-const translationStatReplacementRegex = new RegExp("<!-- Begin of translation stats -->.+<!-- End of translation stats -->", "gms")
+const translationStatReplacementRegex = new RegExp("## Translation stats[^#]+", "gm")
 
 const getTranslationStatsFromTravis = async githubStatusPayload => {
   const matches = githubStatusPayload.target_url.match("/builds/(\\d+)")
@@ -183,13 +181,13 @@ const getTranslationStatsFromTravis = async githubStatusPayload => {
 }
 
 const buildTranslationTable = translationStats => {
-  let output = "<!-- Begin of translation stats -->\nTranslation stats\n\n"
+  let output = "## Translation stats\n\n"
   output += "|language|translated|untranslated|percentage done|\n"
   output += "|--------|----------|------------|---------------|\n"
   for(const language of Object.keys(translationStats).sort()){
     output += `|${language}|${translationStats[language].translated}|${translationStats[language].untranslated}|${translationStats[language].percentage}|\n`
   }
-  output += "\n<!-- End of translation stats -->"
+  output += "\n"
   return output
 }
 
@@ -231,9 +229,9 @@ module.exports = app => {
   application = app
   app.on("status", async context => {
     if(context.payload.context.includes("travis-ci")){
-      setTimeout(() => {
-        setDeployUrl(context.github, context.payload, getTravisOs, getPassedTravisJobs, getTravisLog)
-        createTranslationStatistics(context.github, context.payload)
+      setTimeout(async () => {
+        await setDeployUrl(context.github, context.payload, getTravisOs, getPassedTravisJobs, getTravisLog)
+        await createTranslationStatistics(context.github, context.payload)
       }, 10000)
     }else if(context.payload.context.includes("appveyor")){
       setDeployUrl(context.github, context.payload, getAppveyorOs, getPassedAppveyorJobs, getAppveyorLog)
