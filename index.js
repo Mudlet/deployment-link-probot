@@ -35,7 +35,10 @@ const getPassedTravisJobs = async (targetUrl, repositoryOwner, repositoryName) =
   application.log("Build ID: " + buildId)
   const getTravisBuilds = util.promisify(travis.builds(buildId).get)
   const builds = await getTravisBuilds()
-  const interestingJobs = _.filter(builds.jobs, element => element.number === `${builds.build.number}.1` || element.number === `${builds.build.number}.3`)
+  var interestingJobs = _.filter(builds.jobs, element => element.config.env.includes("deploy"))
+  if(interestingJobs.length === 0) {
+    interestingJobs = _.filter(builds.jobs, element => element.number === `${builds.build.number}.1` || element.number === `${builds.build.number}.3`)
+  }
   const passedJobs = _.filter(interestingJobs, element => element.state === "passed")
   return { passedJobs, prNumber: builds.build.pull_request_number }
 }
