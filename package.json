@@ -4,11 +4,9 @@
   "description": "Keep links to deployments of test versions.",
   "main": "index.js",
   "dependencies": {
-    "github": "^14.0.0",
     "js-yaml": "^3.13.1",
-    "probot": "^9.2.19",
+    "probot": "^9.3.2",
     "xmlhttprequest": "^1.8.0",
-    "travis-ci": "^2.2.0",
     "lodash": "^4.17.15",
     "request-promise-native": "^1.0.7",
     "request": "^2.88.0"
