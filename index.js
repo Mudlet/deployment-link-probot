@@ -1,5 +1,3 @@
-/// TODO: add check for SHA-1
-
 let application
 const _ = require("lodash")
 const request = require("request-promise-native")
