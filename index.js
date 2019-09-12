@@ -1,3 +1,5 @@
+/// TODO: add check for SHA-1
+
 let application
 const _ = require("lodash")
 const request = require("request-promise-native")
@@ -71,7 +73,7 @@ const translatePlatform = platform => {
   return platform
 }
 
-const scrapeMudletSnapshotsForLinks = async prNumber => {
+const getMudletSnapshotLinksForPr = async prNumber => {
   const apiResponse = await request.get(`https://make.mudlet.org/snapshots/json.php?prid=${prNumber}`)
   const allPrLinks = JSON.parse(apiResponse).data
   // let's go crazy with functional programming, shall we?
@@ -106,7 +108,7 @@ const updateCommentUrl = (os, link, comment) => {
 
 const setDeploymentLinks = async (repositoryOwner, repositoryName, prNumber, github) =>{
   application.log("Running for: " + prNumber)
-  const links = await scrapeMudletSnapshotsForLinks(prNumber)
+  const links = await getMudletSnapshotLinksForPr(prNumber)
   const deploymentComment = await getDeploymentComment(repositoryOwner, repositoryName, prNumber, github)
   for(const pair of links){
     updateCommentUrl(pair.platform, pair.url, deploymentComment)
