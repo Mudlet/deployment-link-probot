@@ -86,7 +86,15 @@ const getMudletSnapshotLinksForPr = async prNumber => {
       return result
     }, {windows:[], linux: [], osx:[]})
     // now sort each OS by the creation_time (descending)
-    .mapValues(value => value.sort((first, second) => first.creation_time < second.creation_time))
+    .mapValues(value => value.sort((first, second) => {
+      if(first.creation_time === second.creation_time){
+        return 0
+      } else if (first.creation_time < second.creation_time) {
+        return 1
+      } else {
+        return -1
+      }
+    }))
     // now take the latest link
     .mapValues(value => value[0])
     // flatten the object into an array
