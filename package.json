@@ -5,10 +5,10 @@
   "main": "index.js",
   "dependencies": {
     "js-yaml": "^3.13.1",
-    "probot": "^9.3.2",
+    "probot": "^9.9.1",
     "xmlhttprequest": "^1.8.0",
     "lodash": "^4.17.15",
-    "request-promise-native": "^1.0.7",
+    "request-promise-native": "^1.0.8",
     "request": "^2.88.0"
   },
   "devDependencies": {
