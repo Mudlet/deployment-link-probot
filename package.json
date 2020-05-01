@@ -9,7 +9,8 @@
     "xmlhttprequest": "^1.8.0",
     "lodash": "^4.17.15",
     "request-promise-native": "^1.0.8",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "eslint-plugin-import": "^2.14.0",
@@ -24,7 +25,9 @@
   },
   "scripts": {
     "start": "probot run ./index.js",
-    "test": "mocha && standard --fix"
+    "test": "mocha && standard --fix",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "standard": {
     "env": [
@@ -32,5 +35,6 @@
     ]
   },
   "author": "keneanung",
-  "license": "MIT"
+  "license": "MIT",
+  "snyk": true
 }
