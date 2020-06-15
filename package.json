@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "eslint-plugin-import": "^2.14.0",
-    "expect": "^25.1.0",
+    "expect": "^26.0.1",
     "localtunnel": "^2.0.0",
     "mocha": "^7.0.0",
     "standard": "^14.0.0"
