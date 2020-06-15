@@ -253,4 +253,20 @@ module.exports = app => {
       context.payload.check_run.output.text.match("https://github.com/Mudlet/Mudlet/pull/(\\d+)\\)")[1],
       context.github)
   })
+  
+  app.on("issue_comment", async context => {
+    if(context.payload.action !== "created"){
+      return
+    }
+    
+    if(context.payload.comment.body !== "/refresh links"){
+      return
+    }
+    
+    await setDeploymentLinks(
+      context.payload.repository.owner.login,
+      context.payload.repository.name,
+      context.payload.issue.number,
+      context.github)
+  })
 }
