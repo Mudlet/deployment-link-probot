@@ -4,12 +4,12 @@
   "description": "Keep links to deployments of test versions.",
   "main": "index.js",
   "dependencies": {
-    "js-yaml": "^3.13.1",
-    "probot": "^9.9.1",
+    "js-yaml": "^3.14.0",
+    "probot": "^9.11.5",
     "xmlhttprequest": "^1.8.0",
     "lodash": "^4.17.15",
     "request-promise-native": "^1.0.8",
-    "request": "^2.88.0"
+    "request": "^2.88.2"
   },
   "devDependencies": {
     "eslint-plugin-import": "^2.14.0",
