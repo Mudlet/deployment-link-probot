@@ -6,6 +6,13 @@ This bot removes the need to go to the build looks for the links, but posts them
 
 We considered using the deployment link feature for this first, but deployments are associated with commits, which may live in forked repositories without access for the bot. Using the comment makes the links much easier to copy and paste to other mediums as well.
 
+## Commands ##
+
+The bot supports the following commands by leaving a comment in the PR with the given content:
+
+`/refresh links`
+> Forces a refresh of the links in the bot's comment. Useful if updates stalled for some reason or the bot crashed.
+
 ## Setting up your own instance ##
 
 The bot needs to be set up according to [the probot documentation](https://probot.github.io/docs/deployment/).
