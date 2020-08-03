@@ -18,7 +18,7 @@ const createPrCommentForUs = async (github, payload) => {
           "- windows: (download pending, check back soon!)\n\n" +
           "No need to install anything - just unzip and run.\n" +
           "Let us know if it works well, and if it doesn't, please give details.\n" +
-          (payload.pull_request.title === "New Crowdin translations"
+          (payload.pull_request.title === "New Crowdin updates"
           ? "\n" +
             "## Translation stats\n\n" +
             "calculation pending, check back soon!\n\n"
