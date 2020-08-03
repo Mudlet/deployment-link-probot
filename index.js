@@ -127,7 +127,7 @@ const setDeploymentLinks = async (repositoryOwner, repositoryName, prNumber, git
 ///////////////////////////////////////////////
 // functions for creating the translation statistics
 ///////////////////////////////////////////////
-const translationStatRegex = /^\[\d{2}:\d{2}:\d{2}\] (?<language>\w{2}_\w{2})\t(?<translated>\d+)\t(?<untranslated>\d+)\t\d+\t\d+\t\d+\t(?<percentage>\d+)$/gm
+const translationStatRegex = /^\[\d{2}:\d{2}:\d{2}\]\s*\*?\s*(?<language>\w{2}_\w{2})\s*(?<translated>\d+)\s*(?<untranslated>\d+)\s*\d+\s*\d+\s*\d+\s*(?<percentage>\d+)%$/gm
 const translationStatReplacementRegex = new RegExp("## Translation stats[^#]+", "gm")
 
 const getPassedAppveyorJobs = async (targetUrl, repositoryOwner, repositoryName) => {
@@ -191,6 +191,7 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
     const translationStats = await getTranslationStatsFromAppveyor(githubStatusPayload)
     
     if(Object.keys(translationStats).length === 0){
+      application.log("No translation stats found, aborting")
       return
     }
     const output = buildTranslationTable(translationStats)
