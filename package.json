@@ -16,7 +16,7 @@
     "expect": "^26.0.1",
     "localtunnel": "^2.0.0",
     "mocha": "^8.0.1",
-    "standard": "^14.0.0"
+    "standard": "^16.0.0"
   },
   "engines": {
     "node": "10",
