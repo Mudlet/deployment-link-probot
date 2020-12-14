@@ -87,6 +87,11 @@ const translatePlatform = platform => {
 const getMudletSnapshotLinksForPr = async prNumber => {
   const apiResponse = await request.get(`https://make.mudlet.org/snapshots/json.php?prid=${prNumber}`)
   const allPrLinks = JSON.parse(apiResponse).data
+  
+  if(typeof allPrLinks !== "object"){
+    // we probably got an error here, so return an empty array
+    return [];
+  }
   // let's go crazy with functional programming, shall we?
   const latestLinks = _.chain(allPrLinks)
     // we use a different encoding for macOS, so we need to change it
