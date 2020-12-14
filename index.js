@@ -143,20 +143,20 @@ const getPassedAppveyorJobs = async (targetUrl, repositoryOwner, repositoryName)
 const getAppveyorLog = async job => await request(`https://ci.appveyor.com/api/buildjobs/${job.jobId}/log`)
 
 const getTranslationStatsFromAppveyor = async (githubStatusPayload) => {
-  
+
   application.log("getting passed jobs")
   const passedJobs= await getPassedAppveyorJobs(
     githubStatusPayload.target_url,
     githubStatusPayload.repository.owner.login,
     githubStatusPayload.repository.name
   )
-  
+
   if(passedJobs.length === 0){
     return {}
   }
-  
+
   const log = await getAppveyorLog(passedJobs[0])
-  
+
   let translationMatches
   const translationStats = {}
   while((translationMatches = translationStatRegex.exec(log)) !== null){
@@ -166,7 +166,7 @@ const getTranslationStatsFromAppveyor = async (githubStatusPayload) => {
       percentage: translationMatches.groups.percentage,
     }
   }
-  
+
   return translationStats
 }
 
@@ -189,25 +189,25 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
       githubStatusPayload.target_url.match("/builds/(\\d+)")[1]
     )
     const translationStats = await getTranslationStatsFromAppveyor(githubStatusPayload)
-    
+
     if(Object.keys(translationStats).length === 0){
       application.log("No translation stats found, aborting")
       return
     }
     const output = buildTranslationTable(translationStats)
-    
+
     const comment = await getDeploymentComment(
       githubStatusPayload.repository.owner.login,
       githubStatusPayload.repository.name,
       prNumber,
       github
     )
-    
+
     if(!comment) {
       application.log("Couldn't find our comment, aborting")
       return
     }
-    
+
     comment.body = comment.body.replace(translationStatReplacementRegex, output)  // on non-translation PRs, this doesn't replace anything as the block is not added
     updateDeploymentCommentBody(
       githubStatusPayload.repository.owner.login,
@@ -221,17 +221,17 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
 ///////////////////////////////////////////////
 // entrypoint
 ///////////////////////////////////////////////
-module.exports = app => {
+module.exports = ({app}) => {
   application = app
   // trigger to create a new deployment comment
-  app.on("pull_request", async context =>  createPrCommentForUs(context.github, context.payload)) 
-  
+  app.on("pull_request", async context =>  createPrCommentForUs(context.octokit, context.payload))
+
   // trigger for appveyor builds. We pull the translation statistics from those and we use it as a trigger to scrape https://make.mudlet.org/snapshots
   app.on("status", async context => {
     if(!context.payload.context.includes("pr") && !context.payload.context.includes("appveyor")){
       return
     }
-    await createTranslationStatistics(context.github, context.payload)
+    await createTranslationStatistics(context.octokit, context.payload)
     await setDeploymentLinks(
       context.payload.repository.owner.login,
       context.payload.repository.name,
@@ -240,9 +240,9 @@ module.exports = app => {
         context.payload.repository.name,
         context.payload.target_url.match("/builds/(\\d+)")[1]
       ),
-      context.github)
+      context.octokit)
   })
-  
+
   // trigger for Travis builds. We use it as a trigger to scrape https://make.mudlet.org/snapshots
   app.on("check_run", async context => {
     if(context.payload.check_run.name !== "Travis CI - Pull Request"){
@@ -252,22 +252,22 @@ module.exports = app => {
       context.payload.repository.owner.login,
       context.payload.repository.name,
       context.payload.check_run.output.text.match("https://github.com/Mudlet/Mudlet/pull/(\\d+)\\)")[1],
-      context.github)
+      context.octokit)
   })
-  
+
   app.on("issue_comment", async context => {
     if(context.payload.action !== "created"){
       return
     }
-    
+
     if(context.payload.comment.body !== "/refresh links"){
       return
     }
-    
+
     await setDeploymentLinks(
       context.payload.repository.owner.login,
       context.payload.repository.name,
       context.payload.issue.number,
-      context.github)
+      context.octokit)
   })
 }
