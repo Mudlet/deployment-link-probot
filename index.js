@@ -13,8 +13,8 @@ const createPrCommentForUs = async (github, payload) => {
   const body = "Hey there! Thanks for helping Mudlet improve. :star2:\n\n" +
           "## Test versions\n\n" +
           "You can directly test the changes here:\n" +
-          "- linux: (download pending, check back soon!)\n" +
-          "- osx: (download pending, check back soon!)\n" +
+          "- linux: (temporarily out of order)\n" +
+          "- osx: (temporarily out of order)\n" +
           "- windows: (download pending, check back soon!)\n\n" +
           "No need to install anything - just unzip and run.\n" +
           "Let us know if it works well, and if it doesn't, please give details.\n" +
