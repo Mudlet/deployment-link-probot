@@ -38,7 +38,7 @@ const getDeploymentComment = async (repositoryOwner, repositoryName, prNumber, g
     repo: repositoryName,
     issue_number: prNumber
   })
-  return _.filter(commentAnswer.data, comment => comment.user.login === "add-deployment-links[bot]")[0]
+  return _.find(commentAnswer.data, comment => comment.user.login === "add-deployment-links[bot]")
 }
 
 const updateDeploymentCommentBody = async (repoOwner, repoName, comment, github) => {
@@ -59,6 +59,19 @@ const getPrNumberFromAppveyor = async (repositoryOwner, repositoryName, buildId)
   const response = await request(`https://ci.appveyor.com/api/projects/${repositoryOwner}/${repositoryName.toLowerCase()}/builds/${buildId}`);
   const builds = JSON.parse(response)
   return builds.build.pullRequestId
+}
+
+
+///////////////////////////////////////////////
+// github actions utility functions
+///////////////////////////////////////////////
+const getPrNumberFromHeadBranch = async (headBranch, repoOwner, repoName, github) => {
+  const prs = await github.pulls.list({
+      owner: repoOwner,
+      repo: repoName
+  });
+  const thisPr = _.find(prs.data, pr => pr.head.ref === headBranch);
+  return thisPr.number;
 }
 
 ///////////////////////////////////////////////
@@ -243,15 +256,22 @@ module.exports = ({app}) => {
       context.octokit)
   })
 
-  // trigger for Travis builds. We use it as a trigger to scrape https://make.mudlet.org/snapshots
+  // trigger for github action builds. We use it as a trigger to scrape https://make.mudlet.org/snapshots
   app.on("check_run", async context => {
-    if(context.payload.check_run.name !== "Travis CI - Pull Request"){
+
+    if(context.payload.check_run.app.slug !== "github-actions") {
       return
     }
+
+    const prNumber = await getPrNumberFromHeadBranch(
+      context.payload.check_run.check_suite.head_branch,
+      context.payload.repository.owner.login,
+      context.payload.repository.name,
+      context.octokit)
     await setDeploymentLinks(
       context.payload.repository.owner.login,
       context.payload.repository.name,
-      context.payload.check_run.output.text.match("https://github.com/Mudlet/Mudlet/pull/(\\d+)\\)")[1],
+      prNumber,
       context.octokit)
   })
 
