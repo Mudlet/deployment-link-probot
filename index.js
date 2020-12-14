@@ -71,6 +71,9 @@ const getPrNumberFromHeadBranch = async (headBranch, repoOwner, repoName, github
       repo: repoName
   });
   const thisPr = _.find(prs.data, pr => pr.head.ref === headBranch);
+  if(thisPr === undefined){
+    return undefined;
+  }
   return thisPr.number;
 }
 
@@ -131,6 +134,11 @@ const updateCommentUrl = (os, link, comment) => {
 }
 
 const setDeploymentLinks = async (repositoryOwner, repositoryName, prNumber, github) =>{
+  
+  if(prNumber === undefined){
+    return
+  }
+  
   application.log("Running for: " + prNumber)
   const links = await getMudletSnapshotLinksForPr(prNumber)
   const deploymentComment = await getDeploymentComment(repositoryOwner, repositoryName, prNumber, github)
@@ -273,6 +281,7 @@ module.exports = ({app}) => {
       context.payload.repository.owner.login,
       context.payload.repository.name,
       context.octokit)
+    
     await setDeploymentLinks(
       context.payload.repository.owner.login,
       context.payload.repository.name,
