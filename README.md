@@ -13,6 +13,26 @@ The bot supports the following commands by leaving a comment in the PR with the 
 `/refresh links`
 > Forces a refresh of the links in the bot's comment. Useful if updates stalled for some reason or the bot crashed.
 
+## Non-Github Endpoints ##
+
+The bot supports the following endpoints that are not triggered by GitHub.
+
+### `POST /snapshots/new?owner={owner}&repo={repo}` ###
+
+Similar to the `/refresh links` command, this forces a refresh of the links. The endpoint has the following parameters:
+- `owner`: The owner of the repository to update the deployment links
+- `repo`: The repository to update the deployment links
+- body of the POST: a JSON-array of PR numbers in the given repository to refresh the deployment links for.
+
+Example:
+```
+POST /snapshots/new?owner=mudlet&repo=mudlet HTTP/1.1
+Content-Length: 12
+Content-Type: application/json
+Host: mudlet-deployment-link-probot.glitch.me
+[4571, 4477]
+```
+
 ## Setting up your own instance ##
 
 The bot needs to be set up according to [the probot documentation](https://probot.github.io/docs/deployment/).
