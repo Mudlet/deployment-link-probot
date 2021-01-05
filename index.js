@@ -5,31 +5,30 @@ const request = require("request-promise-native")
 ///////////////////////////////////////////////
 // Utility functions for comments
 ///////////////////////////////////////////////
-const createPrCommentForUs = async (github, payload) => {
-  if(payload.action !== "opened") {
-    return
+const createDeploymentComment = async context => {
+  if(context.payload.action !== "opened") {
+    return;
   }
-  application.log("Creating new comment for our use.")
-  const body = "Hey there! Thanks for helping Mudlet improve. :star2:\n\n" +
-          "## Test versions\n\n" +
-          "You can directly test the changes here:\n" +
-          "- linux: (temporarily out of order)\n" +
-          "- osx: (temporarily out of order)\n" +
-          "- windows: (download pending, check back soon!)\n\n" +
-          "No need to install anything - just unzip and run.\n" +
-          "Let us know if it works well, and if it doesn't, please give details.\n" +
-          (payload.pull_request.title === "New Crowdin updates"
-          ? "\n" +
-            "## Translation stats\n\n" +
-            "calculation pending, check back soon!\n\n"
-          : "")
-  await github.issues.createComment({
-    owner: payload.repository.owner.login,
-    repo: payload.repository.name,
-    issue_number: payload.number,
-    body: body
-  })
+  const body = getCommentTemplate(context.payload.pull_request.title);
+  // GitHub's API handles comments to PRs as issues to issues, so we use the issue context here.
+  const prComment = context.issue({body: body});
+  await context.octokit.issues.createComment(prComment);
 }
+
+const getCommentTemplate = title => 
+  "Hey there! Thanks for helping Mudlet improve. :star2:\n\n" +
+  "## Test versions\n\n" +
+  "You can directly test the changes here:\n" +
+  "- linux: (download pending, check back soon!)\n" +
+  "- osx: (download pending, check back soon!)\n" +
+  "- windows: (download pending, check back soon!)\n\n" +
+  "No need to install anything - just unzip and run.\n" +
+  "Let us know if it works well, and if it doesn't, please give details.\n" +
+  (title === "New Crowdin updates"
+  ? "\n" +
+    "## Translation stats\n\n" +
+    "calculation pending, check back soon!\n\n"
+  : "");
 
 const getDeploymentComment = async (repositoryOwner, repositoryName, prNumber, github) => {
   application.log("retrieving comments...")
@@ -59,22 +58,6 @@ const getPrNumberFromAppveyor = async (repositoryOwner, repositoryName, buildId)
   const response = await request(`https://ci.appveyor.com/api/projects/${repositoryOwner}/${repositoryName.toLowerCase()}/builds/${buildId}`);
   const builds = JSON.parse(response)
   return builds.build.pullRequestId
-}
-
-
-///////////////////////////////////////////////
-// github actions utility functions
-///////////////////////////////////////////////
-const getPrNumberFromHeadBranch = async (headBranch, repoOwner, repoName, github) => {
-  const prs = await github.pulls.list({
-      owner: repoOwner,
-      repo: repoName
-  });
-  const thisPr = _.find(prs.data, pr => pr.head.ref === headBranch);
-  if(thisPr === undefined){
-    return undefined;
-  }
-  return thisPr.number;
 }
 
 ///////////////////////////////////////////////
@@ -245,12 +228,59 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
 }
 
 ///////////////////////////////////////////////
+// functions for handling pingbacks from the snapshots service
+///////////////////////////////////////////////
+
+const newSnapshotHandler = async (request, response) => {
+    
+  if(!validateRequest(request)){
+    response.status(400).send('Bad Request: missing parameters');
+    return;
+  }
+  
+  const owner = request.query.owner;
+  const repo = request.query.repo;
+
+  const appOctokit = await application.auth();
+  const installation = await getInstallation(appOctokit, owner, repo, response);
+  if(installation === undefined){
+    return;
+  }
+  
+  const installationOctokit = await application.auth(installation.id);
+  
+  for (const prNumber of request.body){
+    await setDeploymentLinks(owner, repo, prNumber, installationOctokit)
+  };
+  
+  response.status(204).send();
+}
+
+const validateRequest = request => {
+  return request.query.owner !== undefined && request.query.repo !== undefined;
+}
+
+const getInstallation = async (octokit, owner, repo, response) => {
+  try{
+    return (await octokit.apps.getRepoInstallation({owner, repo})).data;
+  }catch(exception){
+    if(exception.status === 404){
+      response.status(404).send('app not installed to given owner and repository');
+    }else{
+      application.log(exception);
+      response.status(500).send(`Unknown response from GitHub API: ${exception.headers.status}`);
+    }
+    return undefined;
+  }
+}
+
+///////////////////////////////////////////////
 // entrypoint
 ///////////////////////////////////////////////
-module.exports = ({app}) => {
+module.exports = (app, {getRouter}) => {
   application = app
   // trigger to create a new deployment comment
-  app.on("pull_request", async context =>  createPrCommentForUs(context.octokit, context.payload))
+  app.on("pull_request", createDeploymentComment)
 
   // trigger for appveyor builds. We pull the translation statistics from those and we use it as a trigger to scrape https://make.mudlet.org/snapshots
   app.on("status", async context => {
@@ -258,7 +288,7 @@ module.exports = ({app}) => {
       return
     }
     await createTranslationStatistics(context.octokit, context.payload)
-    await setDeploymentLinks(
+    await setDeploymentLinks( 
       context.payload.repository.owner.login,
       context.payload.repository.name,
       await getPrNumberFromAppveyor(
@@ -266,26 +296,6 @@ module.exports = ({app}) => {
         context.payload.repository.name,
         context.payload.target_url.match("/builds/(\\d+)")[1]
       ),
-      context.octokit)
-  })
-
-  // trigger for github action builds. We use it as a trigger to scrape https://make.mudlet.org/snapshots
-  app.on("check_run", async context => {
-
-    if(context.payload.check_run.app.slug !== "github-actions") {
-      return
-    }
-
-    const prNumber = await getPrNumberFromHeadBranch(
-      context.payload.check_run.check_suite.head_branch,
-      context.payload.repository.owner.login,
-      context.payload.repository.name,
-      context.octokit)
-    
-    await setDeploymentLinks(
-      context.payload.repository.owner.login,
-      context.payload.repository.name,
-      prNumber,
       context.octokit)
   })
 
@@ -304,4 +314,10 @@ module.exports = ({app}) => {
       context.payload.issue.number,
       context.octokit)
   })
+  
+  const router = getRouter('/snapshots');
+  
+  router.use(require("express").json());
+  
+  router.post('/new', newSnapshotHandler)
 }
