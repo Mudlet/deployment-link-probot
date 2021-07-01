@@ -10,6 +10,9 @@ We considered using the deployment link feature for this first, but deployments 
 
 The bot supports the following commands by leaving a comment in the PR with the given content:
 
+`/create links`
+> Creates the bot's comment with the deployment links. Useful if the bot crashed or was unable to create the link comment before.
+
 `/refresh links`
 > Forces a refresh of the links in the bot's comment. Useful if updates stalled for some reason or the bot crashed.
 
