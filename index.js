@@ -1,6 +1,6 @@
 let application
 const _ = require("lodash")
-const request = require("request-promise-native")
+const axios = require("axios")
 
 ///////////////////////////////////////////////
 // Utility functions for comments
@@ -52,8 +52,8 @@ const updateDeploymentCommentBody = async (repoOwner, repoName, comment, github)
 // appveyor utility functions
 ///////////////////////////////////////////////
 const getPrNumberFromAppveyor = async (repositoryOwner, repositoryName, buildId) => {
-  const response = await request(`https://ci.appveyor.com/api/projects/${repositoryOwner}/${repositoryName.toLowerCase()}/builds/${buildId}`);
-  const builds = JSON.parse(response)
+  const response = await axios.get(`https://ci.appveyor.com/api/projects/${repositoryOwner}/${repositoryName.toLowerCase()}/builds/${buildId}`);
+  const builds = response.data
   return builds.build.pullRequestId
 }
 
@@ -68,8 +68,8 @@ const translatePlatform = platform => {
 }
 
 const getMudletSnapshotLinksForPr = async prNumber => {
-  const apiResponse = await request.get(`https://make.mudlet.org/snapshots/json.php?prid=${prNumber}`)
-  const allPrLinks = JSON.parse(apiResponse).data
+  const apiResponse = await axios.get(`https://make.mudlet.org/snapshots/json.php?prid=${prNumber}`)
+  const allPrLinks = apiResponse.data.data
   
   if(typeof allPrLinks !== "object"){
     // we probably got an error here, so return an empty array
@@ -143,13 +143,16 @@ const getPassedAppveyorJobs = async (targetUrl, repositoryOwner, repositoryName)
   const matches = targetUrl.match("/builds/(\\d+)")
   const buildId = matches[1]
   application.log("Build ID: " + buildId)
-  const response = await request(`https://ci.appveyor.com/api/projects/${repositoryOwner}/${repositoryName.toLowerCase()}/builds/${buildId}`);
-  const builds = JSON.parse(response)
+  const response = await axios.get(`https://ci.appveyor.com/api/projects/${repositoryOwner}/${repositoryName.toLowerCase()}/builds/${buildId}`);
+  const builds = response.data
   const passedJobs = _.filter(builds.build.jobs, element => element.status === "success")
   return passedJobs
 }
 
-const getAppveyorLog = async job => await request(`https://ci.appveyor.com/api/buildjobs/${job.jobId}/log`)
+const getAppveyorLog = async job => {
+  const response = await axios.get(`https://ci.appveyor.com/api/buildjobs/${job.jobId}/log`)
+  return response.data
+}
 
 const getTranslationStatsFromAppveyor = async (githubStatusPayload) => {
 
