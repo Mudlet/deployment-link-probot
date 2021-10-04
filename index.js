@@ -5,12 +5,9 @@ const request = require("request-promise-native")
 ///////////////////////////////////////////////
 // Utility functions for comments
 ///////////////////////////////////////////////
-const createDeploymentComment = async context => {
-  if(context.payload.action !== "opened") {
-    return;
-  }
-  const body = getCommentTemplate(context.payload.pull_request.title);
-  // GitHub's API handles comments to PRs as issues to issues, so we use the issue context here.
+const createDeploymentComment = async (context, title) => {
+  const body = getCommentTemplate(title);
+  // GitHub's API handles comments to PRs as comments to issues, so we use the issue context here.
   const prComment = context.issue({body: body});
   await context.octokit.issues.createComment(prComment);
 }
@@ -125,6 +122,9 @@ const setDeploymentLinks = async (repositoryOwner, repositoryName, prNumber, git
   application.log("Running for: " + prNumber)
   const links = await getMudletSnapshotLinksForPr(prNumber)
   const deploymentComment = await getDeploymentComment(repositoryOwner, repositoryName, prNumber, github)
+  if(deploymentComment === undefined){ // shouldn't happen, but maybe there was a fluke?
+    return
+  }
   for(const pair of links){
     updateCommentUrl(pair.platform, pair.url, deploymentComment)
   }
@@ -280,7 +280,12 @@ const getInstallation = async (octokit, owner, repo, response) => {
 module.exports = (app, {getRouter}) => {
   application = app
   // trigger to create a new deployment comment
-  app.on("pull_request", createDeploymentComment)
+  app.on("pull_request", async context => {
+    if(context.payload.action !== "opened") {
+      return;
+    }
+    await createDeploymentComment(context, context.payload.pull_request.title)
+  })
 
   // trigger for appveyor builds. We pull the translation statistics from those and we use it as a trigger to scrape https://make.mudlet.org/snapshots
   app.on("status", async context => {
@@ -303,16 +308,20 @@ module.exports = (app, {getRouter}) => {
     if(context.payload.action !== "created"){
       return
     }
-
-    if(context.payload.comment.body !== "/refresh links"){
-      return
+    
+    if(context.payload.comment.body === "/create links"){
+      await createDeploymentComment(context, context.payload.issue.title)
     }
 
-    await setDeploymentLinks(
-      context.payload.repository.owner.login,
-      context.payload.repository.name,
-      context.payload.issue.number,
-      context.octokit)
+    if(context.payload.comment.body === "/refresh links" ||
+       context.payload.comment.body === "/create links")
+    {
+      await setDeploymentLinks(
+        context.payload.repository.owner.login,
+        context.payload.repository.name,
+        context.payload.issue.number,
+        context.octokit)
+    }
   })
   
   const router = getRouter('/snapshots');
