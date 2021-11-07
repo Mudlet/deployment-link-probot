@@ -12,7 +12,7 @@ const createDeploymentComment = async (context, title) => {
   await context.octokit.issues.createComment(prComment);
 }
 
-const getCommentTemplate = title => 
+const getCommentTemplate = title =>
   "Hey there! Thanks for helping Mudlet improve. :star2:\n\n" +
   "## Test versions\n\n" +
   "You can directly test the changes here:\n" +
@@ -70,7 +70,7 @@ const translatePlatform = platform => {
 const getMudletSnapshotLinksForPr = async prNumber => {
   const apiResponse = await axios.get(`https://make.mudlet.org/snapshots/json.php?prid=${prNumber}`)
   const allPrLinks = apiResponse.data.data
-  
+
   if(typeof allPrLinks !== "object"){
     // we probably got an error here, so return an empty array
     return [];
@@ -114,11 +114,11 @@ const updateCommentUrl = (os, link, comment) => {
 }
 
 const setDeploymentLinks = async (repositoryOwner, repositoryName, prNumber, github) =>{
-  
+
   if(prNumber === undefined){
     return
   }
-  
+
   application.log("Running for: " + prNumber)
   const links = await getMudletSnapshotLinksForPr(prNumber)
   const deploymentComment = await getDeploymentComment(repositoryOwner, repositoryName, prNumber, github)
@@ -187,7 +187,7 @@ const buildTranslationTable = translationStats => {
   output += "|language|translated|untranslated|percentage done|\n"
   output += "|--------|----------|------------|---------------|\n"
   for(const language of Object.keys(translationStats).sort()){
-    output += `|${language}|${translationStats[language].translated}|${translationStats[language].untranslated}|${translationStats[language].percentage}|\n`
+    output += `|${language}|${translationStats[language].translated}|${translationStats[language].untranslated}|${translationStats[language].percentage}%|\n`
   }
   output += "\n"
   return output
@@ -235,12 +235,12 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
 ///////////////////////////////////////////////
 
 const newSnapshotHandler = async (request, response) => {
-    
+
   if(!validateRequest(request)){
     response.status(400).send('Bad Request: missing parameters');
     return;
   }
-  
+
   const owner = request.query.owner;
   const repo = request.query.repo;
 
@@ -249,13 +249,13 @@ const newSnapshotHandler = async (request, response) => {
   if(installation === undefined){
     return;
   }
-  
+
   const installationOctokit = await application.auth(installation.id);
-  
+
   for (const prNumber of request.body){
     await setDeploymentLinks(owner, repo, prNumber, installationOctokit)
   };
-  
+
   response.status(204).send();
 }
 
@@ -296,7 +296,7 @@ module.exports = (app, {getRouter}) => {
       return
     }
     await createTranslationStatistics(context.octokit, context.payload)
-    await setDeploymentLinks( 
+    await setDeploymentLinks(
       context.payload.repository.owner.login,
       context.payload.repository.name,
       await getPrNumberFromAppveyor(
@@ -311,7 +311,7 @@ module.exports = (app, {getRouter}) => {
     if(context.payload.action !== "created"){
       return
     }
-    
+
     if(context.payload.comment.body === "/create links"){
       await createDeploymentComment(context, context.payload.issue.title)
     }
@@ -326,10 +326,10 @@ module.exports = (app, {getRouter}) => {
         context.octokit)
     }
   })
-  
+
   const router = getRouter('/snapshots');
-  
+
   router.use(require("express").json());
-  
+
   router.post('/new', newSnapshotHandler)
 }
