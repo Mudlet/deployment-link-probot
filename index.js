@@ -191,7 +191,7 @@ const buildTranslationTable = translationStats => {
   output += "|language|translated|untranslated|percentage done|\n"
   output += "|--------|----------|------------|---------------|\n"
   for(const stat of translationStats){
-    output += `|${stat.language}${stat.hasStar ? ":star:" : ""}|${stat.translated}|${stat.untranslated}|${stat.percentage}%|\n`
+    output += `|${stat.hasStar ? ":star:" : ""}${stat.language}|${stat.translated}|${stat.untranslated}|${stat.percentage}%|\n`
   }
   output += "\n"
   return output
