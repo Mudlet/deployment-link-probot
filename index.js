@@ -136,7 +136,7 @@ const setDeploymentLinks = async (repositoryOwner, repositoryName, prNumber, git
 ///////////////////////////////////////////////
 // functions for creating the translation statistics
 ///////////////////////////////////////////////
-const translationStatRegex = /^\[\d{2}:\d{2}:\d{2}\]\s*\*?\s*(?<language>\w{2}_\w{2})\s*(?<translated>\d+)\s*(?<untranslated>\d+)\s*\d+\s*\d+\s*\d+\s*(?<percentage>\d+)%$/gm
+const translationStatRegex = /^\[\d{2}:\d{2}:\d{2}\]\s*(?<star>\*?)\s*(?<language>\w{2}_\w{2})\s*(?<translated>\d+)\s*(?<untranslated>\d+)\s*\d+\s*\d+\s*\d+\s*(?<percentage>\d+)%$/gm
 const translationStatReplacementRegex = new RegExp("## Translation stats[^#]+", "gm")
 
 const getPassedAppveyorJobs = async (targetUrl, repositoryOwner, repositoryName) => {
@@ -170,14 +170,18 @@ const getTranslationStatsFromAppveyor = async (githubStatusPayload) => {
   const log = await getAppveyorLog(passedJobs[0])
 
   let translationMatches
-  const translationStats = {}
+  const translationStats = []
   while((translationMatches = translationStatRegex.exec(log)) !== null){
-    translationStats[translationMatches.groups.language] = {
+    translationStats.push({
+      language: translationMatches.groups.language,
       translated: translationMatches.groups.translated,
       untranslated: translationMatches.groups.untranslated,
       percentage: translationMatches.groups.percentage,
-    }
+      hasStar: translationMatches.groups.star === '*',
+    })
   }
+  
+  translationStats.sort((item1, item2) => parseInt(item2.percentage) - parseInt(item1.percentage))
 
   return translationStats
 }
@@ -186,8 +190,8 @@ const buildTranslationTable = translationStats => {
   let output = "## Translation stats\n\n"
   output += "|language|translated|untranslated|percentage done|\n"
   output += "|--------|----------|------------|---------------|\n"
-  for(const language of Object.keys(translationStats).sort()){
-    output += `|${language}|${translationStats[language].translated}|${translationStats[language].untranslated}|${translationStats[language].percentage}%|\n`
+  for(const stat of translationStats){
+    output += `|${stat.language}${stat.hasStar ? ":star:" : ""}|${stat.translated}|${stat.untranslated}|${stat.percentage}%|\n`
   }
   output += "\n"
   return output
@@ -202,7 +206,7 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
     )
     const translationStats = await getTranslationStatsFromAppveyor(githubStatusPayload)
 
-    if(Object.keys(translationStats).length === 0){
+    if(translationStats.length === 0){
       application.log("No translation stats found, aborting")
       return
     }
