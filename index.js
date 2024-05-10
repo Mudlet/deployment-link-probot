@@ -18,7 +18,8 @@ const getCommentTemplate = title =>
   "You can directly test the changes here:\n" +
   "- linux: (download pending, check back soon!)\n" +
   "- osx: (download pending, check back soon!)\n" +
-  "- windows: (download pending, check back soon!)\n\n" +
+  "- windows (x64): (download pending, check back soon!)\n\n" +
+  "- windows (x32): (download pending, check back soon!)\n\n" +
   "No need to install anything - just unzip and run.\n" +
   "Let us know if it works well, and if it doesn't, please give details.\n" +
   (title === "Improve: New Crowdin updates"
@@ -96,8 +97,14 @@ const getMudletSnapshotLinksForPr = async prNumber => {
         return -1
       }
     }))
-    // now take the latest link
-    .mapValues(value => value[0])
+    // for windows, take the two latest links: windows-64 and windows-32
+    .mapValues((value, platform) => {
+      if (platform === 'windows') {
+        return value.filter(val => /windows-64|windows-32/.test(val.filename)).slice(0, 2)
+      }
+      // for other platforms, take only the latest link
+      return value[0] ? [value[0]] : []
+    })
     // flatten the object into an array
     .reduce((result, value) => {
       result.push(value)
@@ -126,6 +133,13 @@ const setDeploymentLinks = async (repositoryOwner, repositoryName, prNumber, git
     return
   }
   for(const pair of links){
+    if (pair.platform === 'windows') {
+      if (/windows-64/.test(pair.url)) {
+        pair.platform = 'windows (x64)';
+      } else if (/windows-32/.test(pair.url)) {
+        pair.platform = 'windows (x32)';
+      }
+    }
     updateCommentUrl(pair.platform, pair.url, deploymentComment)
   }
   application.log("New deployment body:")
