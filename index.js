@@ -100,7 +100,7 @@ const getMudletSnapshotLinksForPr = async prNumber => {
     // for windows, take the two latest links: windows-64 and windows-32
     .mapValues((value, platform) => {
       if (platform === 'windows') {
-        return value.filter(val => /windows-64|windows-32/.test(val.filename)).slice(0, 2)
+        return value.filter(val => /windows-64|windows-32/.test(val.url)).slice(0, 2)
       }
       // for other platforms, take only the latest link
       return value[0] ? [value[0]] : []
