@@ -431,6 +431,12 @@ module.exports = (app, { getRouter }) => {
         context.payload.issue.number,
         context.octokit
       );
+      await context.octokit.reactions.createForIssueComment({
+        owner: context.payload.repository.owner.login,
+        repo: context.payload.repository.name,
+        comment_id: context.payload.comment.id,
+        content: "+1",
+      });
     }
   });
 
