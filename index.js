@@ -146,10 +146,10 @@ const getMudletSnapshotLinksForPr = async (prNumber) => {
   return latestLinks;
 };
 
-const updateCommentUrl = (os, link, comment) => {
+const updateCommentUrl = (os, link, commitid, comment) => {
   comment.body = comment.body.replace(
     new RegExp(`- ${os}: .+`),
-    `- ${os}: ${link}`
+    `- ${os}: ${link} (commit ${commitid})`
   );
 };
 
@@ -192,7 +192,7 @@ const setDeploymentLinks = async (
         pair.platform = "osx arm";
       }
     }
-    updateCommentUrl(pair.platform, pair.url, deploymentComment);
+    updateCommentUrl(pair.platform, pair.url, pair.commitid, deploymentComment);
   }
   application.log("New deployment body:");
   application.log(deploymentComment.body);
