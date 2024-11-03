@@ -184,9 +184,14 @@ const setDeploymentLinks = async (
       }
     }
     if (pair.platform === "osx") {
-      if (/x64_86/.test(pair.url)) {
+      if (/x86_64/.test(pair.url)) {
         //TODO support for "legacy" PRs with only one osx platform entry. remove when these are rolled through
-        updateCommentUrl(pair.platform, pair.url, deploymentComment);
+        updateCommentUrl(
+          pair.platform,
+          pair.url,
+          pair.commitid,
+          deploymentComment
+        );
         pair.platform = "osx intel";
       } else if (/arm64/.test(pair.url)) {
         pair.platform = "osx arm";
