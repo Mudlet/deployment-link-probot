@@ -20,7 +20,6 @@ const getCommentTemplate = (title) =>
   "- osx intel: (download pending, check back soon!)\n" +
   "- osx arm: (download pending, check back soon!)\n" +
   "- windows 64 bit: (download pending, check back soon!)\n" +
-  "- windows 32 bit: (download pending, check back soon!)\n\n" +
   "No need to install anything - just unzip and run.\n" +
   "Let us know if it works well, and if it doesn't, please give details.\n" +
   (title === "Improve: New Crowdin updates"
@@ -177,11 +176,7 @@ const setDeploymentLinks = async (
   }
   for (const pair of links) {
     if (pair.platform === "windows") {
-      if (/windows-64/.test(pair.url)) {
-        pair.platform = "windows 64 bit";
-      } else if (/windows-32/.test(pair.url)) {
-        pair.platform = "windows 32 bit";
-      }
+      pair.platform = "windows 64 bit";
     }
     if (pair.platform === "osx") {
       if (/x86_64/.test(pair.url)) {
