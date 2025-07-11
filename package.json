@@ -4,22 +4,22 @@
   "description": "Keep links to deployments of test versions.",
   "main": "index.js",
   "dependencies": {
+    "axios": "^1.10.0",
+    "express": "^4.18.2",
     "js-yaml": "^4.1.0",
-    "probot": "^12.3.0",
-    "xmlhttprequest": "^1.8.0",
     "lodash": "^4.17.21",
-    "axios": "^1.3.3",
-    "express": "^4.18.2"
+    "probot": "^13.4.7",
+    "xmlhttprequest": "^1.8.0"
   },
   "devDependencies": {
     "eslint-plugin-import": "^2.14.0",
     "expect": "^29.0.0",
-    "localtunnel": "^2.0.0",
+    "localtunnel": "npm:@security-patched/localtunnel@^2.0.2-secpatched",
     "mocha": "^10.0.0",
     "standard": "^17.0.0"
   },
   "engines": {
-    "node": "14",
+    "node": "22",
     "npm": ">= 4.0.0"
   },
   "scripts": {
