@@ -41,7 +41,3 @@ Host: mudlet-deployment-link-probot.glitch.me
 The bot needs to be set up according to [the probot documentation](https://probot.github.io/docs/deployment/).
 
 The bot is currently not set up for easy customization of the comment or echo style in the build logs but the places should be easily identified in the source.
-
-## Mudlet glitch.com instance ##
-
-Update by copy/pasting all of the file contents as-is from the Github repo.

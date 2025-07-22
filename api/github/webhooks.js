@@ -1,5 +1,15 @@
-const probot = require('../../probot');
+const { createNodeMiddleware, Probot } = require('probot');
+const appFn = require('../../index');
+
+const probot = new Probot({
+  appId: Number(process.env.APP_ID),
+  privateKey: process.env.PRIVATE_KEY.replace(/\\n/g, "\n"),
+  secret: process.env.WEBHOOK_SECRET,
+});
+
+const middleware = createNodeMiddleware(appFn, { probot });
 
 module.exports = async (req, res) => {
-  await probot.webhooks.middleware(req, res);
+  // Let Probot handle the webhook
+  return middleware(req, res);
 };
