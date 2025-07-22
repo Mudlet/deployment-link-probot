@@ -1,6 +1,7 @@
 const appFn = require('./index')
 const { Probot } = require('probot')
 
+console.log("APP_ID:", process.env.APP_ID);
 module.exports = new Probot({
   overrides: {
     // injected by vercel env vars
