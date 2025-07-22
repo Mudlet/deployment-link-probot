@@ -1,16 +1,10 @@
 const { Probot } = require('probot');
-const appFn = require('../../index'); // or adjust as needed
 
 // GitHub App instance
 const probot = new Probot({
   appId: Number(process.env.APP_ID),
   privateKey: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'),
   secret: process.env.WEBHOOK_SECRET,
-});
-
-let application;
-probot.load((app) => {
-  application = appFn();
 });
 
 const validateRequest = (req) =>
