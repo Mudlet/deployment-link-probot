@@ -1,5 +1,5 @@
-const { Probot } = require("probot");
-const appFn = require("../../../index"); // or adjust as needed
+const { Probot } = require('probot');
+const appFn = require("../../index"); // or adjust as needed
 
 // GitHub App instance
 const probot = new Probot({
@@ -10,7 +10,7 @@ const probot = new Probot({
 
 let application;
 probot.load((app) => {
-  application = app;
+  application = appFn();
 });
 
 const validateRequest = (req) =>
