@@ -1,5 +1,5 @@
 const { Probot } = require('probot');
-const appFn = require("../../index"); // or adjust as needed
+const appFn = require('../../index'); // or adjust as needed
 
 // GitHub App instance
 const probot = new Probot({
@@ -21,7 +21,7 @@ const getInstallation = async (octokit, owner, repo, res) => {
     return (await octokit.apps.getRepoInstallation({ owner, repo })).data;
   } catch (err) {
     if (err.status === 404) {
-      res.status(404).send("App not installed to given owner/repo");
+      res.status(404).send('App not installed to given owner/repo');
     } else {
       res.status(500).send(`GitHub API error: ${err.message}`);
     }
@@ -30,11 +30,11 @@ const getInstallation = async (octokit, owner, repo, res) => {
 };
 
 // Import setDeploymentLinks from your main file or move it here
-const { setDeploymentLinks } = require("../../../index");
+const { setDeploymentLinks } = require('../../index');
 
 module.exports = async (req, res) => {
   if (!validateRequest(req)) {
-    res.status(400).send("Missing parameters");
+    res.status(400).send('Missing parameters');
     return;
   }
 
