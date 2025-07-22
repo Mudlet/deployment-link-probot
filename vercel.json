@@ -6,9 +6,7 @@
     }
   },
   "routes": [
-    {
-      "src": "/api/github/webhooks",
-      "dest": "/api/github/webhooks.js"
-    }
+    { "src": "/api/github/webhooks", "dest": "/api/github/webhooks.js" },
+    { "src": "/api/snapshots/new", "dest": "/api/snapshots/new.js" }
   ]
 }

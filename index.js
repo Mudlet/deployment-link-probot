@@ -63,21 +63,6 @@ const updateDeploymentCommentBody = async (
 };
 
 ///////////////////////////////////////////////
-// appveyor utility functions
-///////////////////////////////////////////////
-const getPrNumberFromAppveyor = async (
-  repositoryOwner,
-  repositoryName,
-  buildId
-) => {
-  const response = await axios.get(
-    `https://ci.appveyor.com/api/projects/${repositoryOwner}/${repositoryName.toLowerCase()}/builds/${buildId}`
-  );
-  const builds = response.data;
-  return builds.build.pullRequestId;
-};
-
-///////////////////////////////////////////////
 // testing link functions
 ///////////////////////////////////////////////
 const translatePlatform = (platform) => {
@@ -214,120 +199,6 @@ const translationStatReplacementRegex = new RegExp(
   "gm"
 );
 
-const getPassedAppveyorJobs = async (
-  targetUrl,
-  repositoryOwner,
-  repositoryName
-) => {
-  const matches = targetUrl.match("/builds/(\\d+)");
-  const buildId = matches[1];
-  application.log("Build ID: " + buildId);
-  const response = await axios.get(
-    `https://ci.appveyor.com/api/projects/${repositoryOwner}/${repositoryName.toLowerCase()}/builds/${buildId}`
-  );
-  const builds = response.data;
-  const passedJobs = _.filter(
-    builds.build.jobs,
-    (element) => element.status === "success"
-  );
-  return passedJobs;
-};
-
-const getAppveyorLog = async (job) => {
-  const response = await axios.get(
-    `https://ci.appveyor.com/api/buildjobs/${job.jobId}/log`
-  );
-  return response.data;
-};
-
-const getTranslationStatsFromAppveyor = async (githubStatusPayload) => {
-  application.log("getting passed jobs");
-  const passedJobs = await getPassedAppveyorJobs(
-    githubStatusPayload.target_url,
-    githubStatusPayload.repository.owner.login,
-    githubStatusPayload.repository.name
-  );
-
-  if (passedJobs.length === 0) {
-    return {};
-  }
-
-  const log = await getAppveyorLog(passedJobs[0]);
-
-  let translationMatches;
-  const translationStats = [];
-  while ((translationMatches = translationStatRegex.exec(log)) !== null) {
-    translationStats.push({
-      language: translationMatches.groups.language,
-      translated: translationMatches.groups.translated,
-      untranslated: translationMatches.groups.untranslated,
-      percentage: translationMatches.groups.percentage,
-      hasStar: translationMatches.groups.star === "*",
-    });
-  }
-
-  translationStats.sort(
-    (item1, item2) => parseInt(item2.percentage) - parseInt(item1.percentage)
-  );
-
-  return translationStats;
-};
-
-const buildTranslationTable = (translationStats) => {
-  let output = "## Translation stats\n\n";
-  output += "|language|translated|untranslated|percentage done|\n";
-  output += "|--------|----------|------------|---------------|\n";
-  for (const stat of translationStats) {
-    output += `|${stat.hasStar ? ":star:" : ""}${stat.language}|${
-      stat.translated
-    }|${stat.untranslated}|${stat.percentage}%|\n`;
-  }
-  output += "\n";
-  return output;
-};
-
-const createTranslationStatistics = async (github, githubStatusPayload) => {
-  if (githubStatusPayload.context.includes("pr")) {
-    const prNumber = await getPrNumberFromAppveyor(
-      githubStatusPayload.repository.owner.login,
-      githubStatusPayload.repository.name,
-      githubStatusPayload.target_url.match("/builds/(\\d+)")[1]
-    );
-    const translationStats = await getTranslationStatsFromAppveyor(
-      githubStatusPayload
-    );
-
-    if (translationStats.length === 0) {
-      application.log("No translation stats found, aborting");
-      return;
-    }
-    const output = buildTranslationTable(translationStats);
-
-    const comment = await getDeploymentComment(
-      githubStatusPayload.repository.owner.login,
-      githubStatusPayload.repository.name,
-      prNumber,
-      github
-    );
-
-    if (!comment) {
-      application.log("Couldn't find our comment, aborting");
-      return;
-    }
-
-    comment.body = comment.body.replace(
-      translationStatReplacementRegex,
-      output
-    ); // on non-translation PRs, this doesn't replace anything as the block is not added
-    updateDeploymentCommentBody(
-      githubStatusPayload.repository.owner.login,
-      githubStatusPayload.repository.name,
-      comment,
-      github
-    );
-  }
-};
-
 ///////////////////////////////////////////////
 // functions for handling pingbacks from the snapshots service
 ///////////////////////////////////////////////
@@ -439,10 +310,4 @@ module.exports = (app, { getRouter }) => {
       });
     }
   });
-
-  const router = getRouter("/snapshots");
-
-  router.use(require("express").json());
-
-  router.post("/new", newSnapshotHandler);
 };
