@@ -1,5 +1,5 @@
-const { createNodeMiddleware, Probot } = require("probot");
-const appFn = require("../../../index");
+const { createNodeMiddleware, Probot } = require('probot');
+const appFn = require('../../index');
 
 const probot = new Probot({
   appId: Number(process.env.APP_ID),
