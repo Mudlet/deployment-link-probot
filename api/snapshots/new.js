@@ -4,7 +4,7 @@ const { Probot } = require('probot');
 const probot = new Probot({
   appId: Number(process.env.APP_ID),
   privateKey: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'),
-  secret: process.env.WEBHOOK_SECRET,
+  secret: process.env.WEBHOOK_SECRET
 });
 
 const validateRequest = (req) =>
@@ -33,8 +33,17 @@ module.exports = async (req, res) => {
   }
 
   const { owner, repo } = req.query;
-
-  const appOctokit = await probot.auth();
+  let appOctokit;
+  try {
+    appOctokit = await probot.auth();
+  } catch (err) {
+    if (err.status === 404) {
+      res.status(404).send(`404 return from probot.auth. ${err.message}`);
+    } else {
+      res.status(500).send(`GitHub API error: ${err.message}`);
+    }
+    return undefined;
+  }
   const installations = await appOctokit.request('GET /app/installations');
   console.log(installations.data);
   const installation = await getInstallation(appOctokit, owner, repo, res);
