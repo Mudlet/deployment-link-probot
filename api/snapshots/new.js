@@ -33,19 +33,13 @@ module.exports = async (req, res) => {
   }
 
   const { owner, repo } = req.query;
-  let appOctokit;
-  try {
-    appOctokit = await probot.auth();
-  } catch (err) {
-    console.log(appOctokit, err);
-  }
-  const installations = await appOctokit.request('GET /app/installations');
-  console.log(installations.data);
-  const installation = await getInstallation(appOctokit, owner, repo, res);
-  if (!installation) return;
-
-  const installationOctokit = await probot.auth(installation.id);
-
+  const appOctokit = await probot.auth(); // JWT
+  const { data: installs } = await appOctokit.request('GET /app/installations');
+// pick install
+  const inst = installs.find(i => i.account.login === owner);
+  if (!inst) return res.status(404).send('Not installed for owner');
+  const installationOctokit = await probot.auth(inst.id);
+  console.log(await installationOctokit.request('GET /installation/repositories'));
   for (const prNumber of req.body || []) {
     await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
   }
