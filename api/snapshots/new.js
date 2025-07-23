@@ -37,8 +37,7 @@ module.exports = async (req, res) => {
   try {
     appOctokit = await probot.auth();
   } catch (err) {
-    res.status(500).send(`GitHub API error: ${err.message}`);
-    return undefined;
+    console.log(appOctokit, err);
   }
   const installations = await appOctokit.request('GET /app/installations');
   console.log(installations.data);
