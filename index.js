@@ -235,10 +235,10 @@ const getInstallation = async (octokit, owner, repo, response) => {
   try {
     return (await octokit.apps.getRepoInstallation({ owner, repo })).data;
   } catch (exception) {
-    if (exception.status === 404) {
+    if (exception.status === 404 || exception.status === 204) {
       response
-        .status(404)
-        .send("app not installed to given owner and repository");
+        .status(exception.status)
+        .send(`app not installed to given owner and repository: ${exception.headers.status}`);
     } else {
       application.log(exception);
       response
@@ -252,7 +252,7 @@ const getInstallation = async (octokit, owner, repo, response) => {
 ///////////////////////////////////////////////
 // entrypoint
 ///////////////////////////////////////////////
-module.exports = (app, { getRouter }) => {
+module.exports = (app) => {
   application = app;
   // trigger to create a new deployment comment
   app.on("pull_request", async (context) => {

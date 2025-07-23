@@ -35,6 +35,8 @@ module.exports = async (req, res) => {
   const { owner, repo } = req.query;
 
   const appOctokit = await probot.auth();
+  const installations = await appOctokit.request('GET /app/installations');
+  console.log(installations.data);
   const installation = await getInstallation(appOctokit, owner, repo, res);
   if (!installation) return;
 
