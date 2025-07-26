@@ -24,7 +24,7 @@ const getInstallation = async (octokit, owner, repo, res) => {
 };
 
 // Import setDeploymentLinks from your main file or move it here
-const { setDeploymentLinks } = require('../../index');
+const { setDeploymentLinks, getDeploymentComment } = require('../../index');
 
 module.exports = async (req, res) => {
   if (!validateRequest(req)) {
@@ -39,10 +39,11 @@ module.exports = async (req, res) => {
   if (!installation) return;
 
   const installationOctokit = await probot.auth(installation.id);
-
+  let lastPRNumber = 0;
   for (const prNumber of req.body || []) {
     await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
+    lastPRNumber = prNumber;
   }
 
-  res.status(204).send();
+  res.status(204).send(getDeploymentComment(owner, repo, lastPRNumber, installationOctokit));
 };
