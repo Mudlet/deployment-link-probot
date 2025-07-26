@@ -8,7 +8,7 @@ const probot = new Probot({
 });
 
 const validateRequest = (req) =>
-  req.query.owner !== undefined && req.query.repo !== undefined;
+  req.query?.owner !== undefined && req.query?.repo !== undefined;
 
 const getInstallation = async (octokit, owner, repo, res) => {
   try {
