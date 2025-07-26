@@ -190,66 +190,6 @@ const setDeploymentLinks = async (
 };
 
 ///////////////////////////////////////////////
-// functions for creating the translation statistics
-///////////////////////////////////////////////
-const translationStatRegex =
-  /^\[\d{2}:\d{2}:\d{2}\]\s*(?<star>\*?)\s*(?<language>\w{2}_\w{2})\s*(?<translated>\d+)\s*(?<untranslated>\d+)\s*\d+\s*\d+\s*\d+\s*(?<percentage>\d+)%$/gm;
-const translationStatReplacementRegex = new RegExp(
-  "## Translation stats[^#]+",
-  "gm"
-);
-
-///////////////////////////////////////////////
-// functions for handling pingbacks from the snapshots service
-///////////////////////////////////////////////
-
-const newSnapshotHandler = async (request, response) => {
-  if (!validateRequest(request)) {
-    response.status(400).send("Bad Request: missing parameters");
-    return;
-  }
-
-  const owner = request.query.owner;
-  const repo = request.query.repo;
-
-  const appOctokit = await application.auth();
-  const installation = await getInstallation(appOctokit, owner, repo, response);
-  if (installation === undefined) {
-    return;
-  }
-
-  const installationOctokit = await application.auth(installation.id);
-
-  for (const prNumber of request.body) {
-    await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
-  }
-
-  response.status(204).send();
-};
-
-const validateRequest = (request) => {
-  return request.query.owner !== undefined && request.query.repo !== undefined;
-};
-
-const getInstallation = async (octokit, owner, repo, response) => {
-  try {
-    return (await octokit.apps.getRepoInstallation({ owner, repo })).data;
-  } catch (exception) {
-    if (exception.status === 404) {
-      response
-        .status(404)
-        .send("app not installed to given owner and repository");
-    } else {
-      application.log(exception);
-      response
-        .status(500)
-        .send(`Unknown response from GitHub API: ${exception.headers.status}`);
-    }
-    return undefined;
-  }
-};
-
-///////////////////////////////////////////////
 // entrypoint
 ///////////////////////////////////////////////
 module.exports = (app) => {
@@ -260,27 +200,6 @@ module.exports = (app) => {
       return;
     }
     await createDeploymentComment(context, context.payload.pull_request.title);
-  });
-
-  // trigger for appveyor builds. We pull the translation statistics from those and we use it as a trigger to scrape https://make.mudlet.org/snapshots
-  app.on("status", async (context) => {
-    if (
-      !context.payload.context.includes("pr") &&
-      !context.payload.context.includes("appveyor")
-    ) {
-      return;
-    }
-    await createTranslationStatistics(context.octokit, context.payload);
-    await setDeploymentLinks(
-      context.payload.repository.owner.login,
-      context.payload.repository.name,
-      await getPrNumberFromAppveyor(
-        context.payload.repository.owner.login,
-        context.payload.repository.name,
-        context.payload.target_url.match("/builds/(\\d+)")[1]
-      ),
-      context.octokit
-    );
   });
 
   app.on("issue_comment", async (context) => {

@@ -15,9 +15,9 @@ const getInstallation = async (octokit, owner, repo, res) => {
     return (await octokit.apps.getRepoInstallation({ owner, repo })).data;
   } catch (err) {
     if (err.status === 404) {
-      res.status(404).send('App not installed to given owner/repo');
+      res.status(404).send('getInstallation: App not installed to given owner/repo');
     } else {
-      res.status(500).send(`GitHub API error: ${err.message}`);
+      res.status(500).send(`getInstallation: GitHub API error: ${err.message}`);
     }
     return undefined;
   }
