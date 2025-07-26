@@ -44,6 +44,6 @@ module.exports = async (req, res) => {
     await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
     lastPRNumber = prNumber;
   }
-  res.set('X-Last-PR-Number', lastPRNumber.toString());
+  res.setHeader('X-Last-PR-Number', lastPRNumber.toString());
   res.status(204).send();
 };
