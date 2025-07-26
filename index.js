@@ -2,13 +2,13 @@ let application
 const _ = require('lodash')
 const axios = require('axios')
 
-///////////////////////////////////////////////
+/// ////////////////////////////////////////////
 // Utility functions for comments
-///////////////////////////////////////////////
+/// ////////////////////////////////////////////
 const createDeploymentComment = async (context, title) => {
   const body = getCommentTemplate(title)
   // GitHub's API handles comments to PRs as comments to issues, so we use the issue context here.
-  const prComment = context.issue({ body: body })
+  const prComment = context.issue({ body })
   await context.octokit.issues.createComment(prComment)
 }
 
@@ -34,11 +34,11 @@ const getDeploymentComment = async (
   prNumber,
   github
 ) => {
-  application.log('retrieving comments...')
+  application?.log('retrieving comments...')
   const commentAnswer = await github.issues.listComments({
     owner: repositoryOwner,
     repo: repositoryName,
-    issue_number: prNumber,
+    issue_number: prNumber
   })
   return _.find(
     commentAnswer.data,
@@ -52,19 +52,19 @@ const updateDeploymentCommentBody = async (
   comment,
   github
 ) => {
-  application.log('Setting new comment body to:')
-  application.log(comment.body)
+  application?.log('Setting new comment body to:')
+  application?.log(comment.body)
   await github.issues.updateComment({
     owner: repoOwner,
     repo: repoName,
     comment_id: comment.id,
-    body: comment.body,
+    body: comment.body
   })
 }
 
-///////////////////////////////////////////////
+/// ////////////////////////////////////////////
 // testing link functions
-///////////////////////////////////////////////
+/// ////////////////////////////////////////////
 const translatePlatform = (platform) => {
   if (platform === 'macos') {
     return 'osx'
@@ -147,7 +147,7 @@ const setDeploymentLinks = async (
     return
   }
 
-  application.log('Running for: ' + prNumber)
+  application?.log('Running for: ' + prNumber)
   const links = await getMudletSnapshotLinksForPr(prNumber)
   const deploymentComment = await getDeploymentComment(
     repositoryOwner,
@@ -165,7 +165,7 @@ const setDeploymentLinks = async (
     }
     if (pair.platform === 'osx') {
       if (/x86_64/.test(pair.url)) {
-        //TODO support for "legacy" PRs with only one osx platform entry. remove when these are rolled through
+        // TODO support for "legacy" PRs with only one osx platform entry. remove when these are rolled through
         updateCommentUrl(
           pair.platform,
           pair.url,
@@ -179,8 +179,8 @@ const setDeploymentLinks = async (
     }
     updateCommentUrl(pair.platform, pair.url, pair.commitid, deploymentComment)
   }
-  application.log('New deployment body:')
-  application.log(deploymentComment.body)
+  application?.log('New deployment body:')
+  application?.log(deploymentComment.body)
   updateDeploymentCommentBody(
     repositoryOwner,
     repositoryName,
@@ -189,9 +189,9 @@ const setDeploymentLinks = async (
   )
 }
 
-///////////////////////////////////////////////
+/// ////////////////////////////////////////////
 // entrypoint
-///////////////////////////////////////////////
+/// ////////////////////////////////////////////
 module.exports = {
   probotApp: (app) => {
     application = app
@@ -226,7 +226,7 @@ module.exports = {
           owner: context.payload.repository.owner.login,
           repo: context.payload.repository.name,
           comment_id: context.payload.comment.id,
-          content: '+1',
+          content: '+1'
         })
       }
     })
