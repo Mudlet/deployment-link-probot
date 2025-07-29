@@ -35,7 +35,7 @@ const getDeploymentComment = async (
   github
 ) => {
   let commentAnswer;
-  console.log('retrieving comments...')
+  console.warn('retrieving comments...')
   try {
     commentAnswer = await github.issues.listComments({
       owner: repositoryOwner,
@@ -43,10 +43,10 @@ const getDeploymentComment = async (
       issue_number: prNumber
     })
   } catch (err) {
-    console.log(`Error fetching comments: ${err.message}`);
+    console.warn(`Error fetching comments: ${err.message}`);
     return undefined;
   }
-  // console.log(JSON.stringify(commentAnswer, null, 2));
+  // console.warn(JSON.stringify(commentAnswer, null, 2));
   // TODO: need to add a comment if there isn't one already, somewhere
   return _.find(
     commentAnswer.data,
@@ -60,8 +60,8 @@ const updateDeploymentCommentBody = async (
   comment,
   github
 ) => {
-  console.log('Setting new comment body to:')
-  console.log(comment.body)
+  console.warn('Setting new comment body to:')
+  console.warn(comment.body)
   await github.issues.updateComment({
     owner: repoOwner,
     repo: repoName,
@@ -155,7 +155,7 @@ const setDeploymentLinks = async (
     return
   }
 
-  console.log('Running for: ' + prNumber)
+  console.warn('Running for: ' + prNumber)
   const links = await getMudletSnapshotLinksForPr(prNumber)
   const deploymentComment = await getDeploymentComment(
     repositoryOwner,
@@ -187,8 +187,8 @@ const setDeploymentLinks = async (
     }
     updateCommentUrl(pair.platform, pair.url, pair.commitid, deploymentComment)
   }
-  console.log('New deployment body:')
-  console.log(deploymentComment.body)
+  console.warn('New deployment body:')
+  console.warn(deploymentComment.body)
   updateDeploymentCommentBody(
     repositoryOwner,
     repositoryName,
