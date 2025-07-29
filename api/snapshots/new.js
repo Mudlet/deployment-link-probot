@@ -2,9 +2,9 @@ const { Probot } = require('probot');
 
 // GitHub App instance
 const probot = new Probot({
-  appId: Number(process.env.APP_ID),
-  privateKey: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'),
-  secret: process.env.WEBHOOK_SECRET,
+  appId: Number(process.env.APP_ID ?? 0),
+  privateKey: (process.env.PRIVATE_KEY ?? '').replace(/\\n/g, '\n'),
+  secret: process.env.WEBHOOK_SECRET ?? '',
 });
 
 const validateRequest = (req) =>
@@ -24,7 +24,7 @@ const getInstallation = async (octokit, owner, repo, res) => {
 };
 
 // Import setDeploymentLinks from your main file or move it here
-const { setDeploymentLinks, getDeploymentComment } = require('../../index');
+const { setDeploymentLinks } = require('../../index');
 
 module.exports = async (req, res) => {
   if (!validateRequest(req)) {
