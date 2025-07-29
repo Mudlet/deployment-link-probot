@@ -1,6 +1,7 @@
 const { createNodeMiddleware, Probot } = require('probot');
 const { probotApp } = require('../../index');
 const getRawBody = require('raw-body');
+const crypto = require('crypto');
 
 const probot = new Probot({
   appId: Number(process.env.APP_ID ?? 0),
