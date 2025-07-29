@@ -240,5 +240,6 @@ module.exports = {
     })
   },
   setDeploymentLinks,
-  getDeploymentComment
+  getDeploymentComment,
+  createDeploymentComment,
 }

@@ -24,7 +24,9 @@ const getInstallation = async (octokit, owner, repo, res) => {
 };
 
 // Import setDeploymentLinks from your main file or move it here
-const { setDeploymentLinks } = require('../../index');
+const { setDeploymentLinks,
+  getDeploymentComment,
+  createDeploymentComment } = require('../../index');
 
 module.exports = async (req, res) => {
   if (!validateRequest(req)) {
@@ -41,7 +43,25 @@ module.exports = async (req, res) => {
   const installationOctokit = await probot.auth(installation.id);
   let lastPRNumber = 0;
   for (const prNumber of req.body || []) {
-    await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
+    const existingComment = await getDeploymentComment(
+      owner,
+      repo,
+      prNumber,
+      installationOctokit
+    );
+
+    if (!existingComment) {
+      // Create a new comment using the app logic
+      await createDeploymentComment(
+        {
+          issue: ({ body }) => ({ owner, repo, issue_number: prNumber, body }),
+          octokit: installationOctokit
+        },
+        'Automated deployment links' // You can adjust title if needed
+      );
+    } else {
+      await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
+    }
     lastPRNumber = prNumber;
   }
   res.setHeader('X-Last-PR-Number', lastPRNumber.toString());
