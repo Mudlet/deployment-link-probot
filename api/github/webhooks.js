@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
   // DEBUG: Signature troubleshooting
   try {
     // const rawBody = await getRawBody(req); // You’ll need raw body, not parsed body
-    const rawBody = req.body;
+    const rawBody = await getRawBody(req);
     const expectedSignature = `sha256=${crypto
       .createHmac('sha256', process.env.WEBHOOK_SECRET)
       .update(rawBody)
