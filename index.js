@@ -60,8 +60,8 @@ const updateDeploymentCommentBody = async (
   comment,
   github
 ) => {
-  console.warn('Setting new comment body to:')
-  console.warn(comment.body)
+  // console.warn('Setting new comment body to:')
+  // console.warn(comment.body)
   await github.issues.updateComment({
     owner: repoOwner,
     repo: repoName,
@@ -187,8 +187,8 @@ const setDeploymentLinks = async (
     }
     updateCommentUrl(pair.platform, pair.url, pair.commitid, deploymentComment)
   }
-  console.warn('New deployment body:')
-  console.warn(deploymentComment.body)
+  // console.warn('New deployment body:')
+  // console.warn(deploymentComment.body)
   updateDeploymentCommentBody(
     repositoryOwner,
     repositoryName,
