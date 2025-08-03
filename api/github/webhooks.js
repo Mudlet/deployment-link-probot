@@ -30,11 +30,6 @@ module.exports = async (req, res) => {
   console.warn('WEBHOOK:', process.env.WEBHOOK_SECRET)
   console.warn('Expected Signature:', expectedSignature)
   console.warn('Received Signature:', receivedSignature)
-
-  if (expectedSignature !== receivedSignature) {
-    console.error('Signatures do not match!')
-    return res.status(401).send('Invalid signature')
-  }
   // Let Probot handle the webhook
   const middleware = createNodeMiddleware(probotApp, { probot })
   return middleware(req, res)

@@ -1,4 +1,3 @@
-let application
 const _ = require('lodash')
 const axios = require('axios')
 
@@ -202,7 +201,6 @@ const setDeploymentLinks = async (
 /// ////////////////////////////////////////////
 module.exports = {
   probotApp: (app) => {
-    application = app
     // trigger to create a new deployment comment
     app.on('pull_request', async (context) => {
       if (context.payload.action !== 'opened') {
