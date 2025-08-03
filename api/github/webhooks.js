@@ -9,13 +9,18 @@ const probot = new Probot({
   secret: process.env.WEBHOOK_SECRET ?? '',
 });
 
-const middleware = createNodeMiddleware(probotApp, { probot });
-
+// This might impact body parsing on vercel or might be chatgpt hallucination
+export const config = {
+  api: {
+    bodyParser: false, // critical for raw body
+  },
+};
 module.exports = async (req, res) => {
   // DEBUG: Signature troubleshooting
   try {
     // const rawBody = await getRawBody(req); // You’ll need raw body, not parsed body
     const rawBody = await getRawBody(req);
+    req.body = rawBody; // Important: must remain a Buffer
     const expectedSignature = `sha256=${crypto
       .createHmac('sha256', process.env.WEBHOOK_SECRET)
       .update(rawBody)
@@ -27,5 +32,6 @@ module.exports = async (req, res) => {
     console.warn('Signature debugging failed:', err.message);
   }
   // Let Probot handle the webhook
+  const middleware = createNodeMiddleware(probotApp, { probot });
   return middleware(req, res);
 };
