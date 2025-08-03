@@ -34,7 +34,7 @@ const getDeploymentComment = async (
   prNumber,
   github
 ) => {
-  let commentAnswer;
+  let commentAnswer
   console.warn('retrieving comments...')
   try {
     commentAnswer = await github.issues.listComments({
@@ -43,8 +43,8 @@ const getDeploymentComment = async (
       issue_number: prNumber
     })
   } catch (err) {
-    console.warn(`Error fetching comments: ${err.message}`);
-    return undefined;
+    console.warn(`Error fetching comments: ${err.message}`)
+    return undefined
   }
   // console.warn(JSON.stringify(commentAnswer, null, 2));
   // TODO: need to add a comment if there isn't one already, somewhere
@@ -241,5 +241,5 @@ module.exports = {
   },
   setDeploymentLinks,
   getDeploymentComment,
-  createDeploymentComment,
+  createDeploymentComment
 }
