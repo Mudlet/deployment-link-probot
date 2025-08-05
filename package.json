@@ -4,10 +4,13 @@
   "description": "Keep links to deployments of test versions.",
   "main": "index.js",
   "dependencies": {
+    "@octokit/auth-app": "^8.0.2",
+    "@octokit/core": "^5.2.2",
     "axios": "^1.10.0",
     "express": "^4.18.2",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
+    "micro": "^10.0.1",
     "probot": "^13.4.7",
     "xmlhttprequest": "^1.8.0"
   },
@@ -19,8 +22,8 @@
     "standard": "^17.0.0"
   },
   "engines": {
-    "node": "22",
-    "npm": ">= 4.0.0"
+    "node": "22.x",
+    "npm": ">= 9.0.0"
   },
   "scripts": {
     "start": "probot run ./index.js",
