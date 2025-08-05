@@ -1,7 +1,7 @@
 {
   "functions": {
-    "api/**/*.js": {
-      "runtime": "vercel/node@22.x",
+    "api/snapshots/new.js": {
+      "runtime": "@vercel/node@20.x",
       "memory": 512,
       "maxDuration": 10
     }
