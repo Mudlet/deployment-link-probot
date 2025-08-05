@@ -1,11 +1,11 @@
 {
   "functions": {
     "api/github/webhooks.js": {
-      "runtime": "nodejs18.x",
+      "runtime": "nodejs20.x",
       "maxDuration": 10
     },
     "api/snapshots/new.js": {
-      "runtime": "nodejs18.x",
+      "runtime": "nodejs20.x",
       "maxDuration": 10,
     }
   },

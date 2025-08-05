@@ -20,8 +20,8 @@
     "standard": "^17.0.0"
   },
   "engines": {
-    "node": "22",
-    "npm": ">= 4.0.0"
+    "node": "20",
+    "npm": ">= 9.0.0"
   },
   "scripts": {
     "start": "probot run ./index.js",
