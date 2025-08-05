@@ -20,7 +20,7 @@
     "standard": "^17.0.0"
   },
   "engines": {
-    "node": "20",
+    "node": "20.x",
     "npm": ">= 9.0.0"
   },
   "scripts": {
