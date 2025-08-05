@@ -1,71 +1,72 @@
-const { Probot } = require('probot')
+const { Probot } = require('probot');
+const { setDeploymentLinks, getDeploymentComment, createDeploymentComment } = require('../../index');
 
-// GitHub App instance
 const probot = new Probot({
   appId: Number(process.env.APP_ID ?? 0),
   privateKey: (process.env.PRIVATE_KEY ?? '').replace(/\\n/g, '\n'),
   secret: process.env.WEBHOOK_SECRET ?? ''
-})
+});
 
-const validateRequest = (req) =>
-  req.query?.owner !== undefined && req.query?.repo !== undefined
+const validateRequest = (searchParams) =>
+  searchParams.get('owner') !== null && searchParams.get('repo') !== null;
 
-const getInstallation = async (octokit, owner, repo, res) => {
+export const config = {
+  runtime: 'edge' // Required for Edge functions
+};
+
+export default async function handler(req) {
+  const url = new URL(req.url);
+  const searchParams = url.searchParams;
+
+  if (!validateRequest(searchParams)) {
+    return new Response('Missing parameters', { status: 400 });
+  }
+
+  const owner = searchParams.get('owner');
+  const repo = searchParams.get('repo');
+
+  let body;
   try {
-    return (await octokit.apps.getRepoInstallation({ owner, repo })).data
+    body = await req.json(); // req is a Fetch API Request
+  } catch {
+    return new Response('Invalid JSON body', { status: 400 });
+  }
+
+  let installation;
+  try {
+    const appOctokit = await probot.auth();
+    const result = await appOctokit.apps.getRepoInstallation({ owner, repo });
+    installation = result.data;
   } catch (err) {
-    if (err.status === 404) {
-      res.status(404).send('getInstallation: App not installed to given owner/repo')
-    } else {
-      res.status(500).send(`getInstallation: GitHub API error: ${err.message}`)
-    }
-    return undefined
-  }
-}
-
-// Import setDeploymentLinks from your main file or move it here
-const {
-  setDeploymentLinks,
-  getDeploymentComment,
-  createDeploymentComment
-} = require('../../index')
-
-module.exports = async (req, res) => {
-  if (!validateRequest(req)) {
-    res.status(400).send('Missing parameters')
-    return
+    const status = err.status === 404 ? 404 : 500;
+    const msg = err.status === 404
+      ? 'getInstallation: App not installed to given owner/repo'
+      : `getInstallation: GitHub API error: ${err.message}`;
+    return new Response(msg, { status });
   }
 
-  const { owner, repo } = req.query
+  const installationOctokit = await probot.auth(installation.id);
+  let lastPRNumber = 0;
 
-  const appOctokit = await probot.auth()
-  const installation = await getInstallation(appOctokit, owner, repo, res)
-  if (!installation) return
-
-  const installationOctokit = await probot.auth(installation.id)
-  let lastPRNumber = 0
-  for (const prNumber of req.body || []) {
-    const existingComment = await getDeploymentComment(
-      owner,
-      repo,
-      prNumber,
-      installationOctokit
-    )
+  for (const prNumber of body || []) {
+    const existingComment = await getDeploymentComment(owner, repo, prNumber, installationOctokit);
 
     if (!existingComment) {
-      // Create a new comment using the app logic
       await createDeploymentComment(
         {
           issue: ({ body }) => ({ owner, repo, issue_number: prNumber, body }),
           octokit: installationOctokit
         },
-        'Automated deployment links' // You can adjust title if needed
-      )
+        'Automated deployment links'
+      );
     } else {
-      await setDeploymentLinks(owner, repo, prNumber, installationOctokit)
+      await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
     }
-    lastPRNumber = prNumber
+
+    lastPRNumber = prNumber;
   }
-  res.setHeader('X-Last-PR-Number', lastPRNumber.toString())
-  res.status(204).send()
+
+  const headers = new Headers();
+  headers.set('X-Last-PR-Number', lastPRNumber.toString());
+  return new Response(null, { status: 204, headers });
 }
