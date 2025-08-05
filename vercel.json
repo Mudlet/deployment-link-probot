@@ -1,12 +1,8 @@
 {
+  "version": 2,
   "functions": {
-    "api/github/webhooks.js": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 10
-    },
-    "api/snapshots/new.js": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 10
+    "api/**/*.js": {
+      "runtime": "vercel/node@20.x"
     }
   },
   "routes": [
