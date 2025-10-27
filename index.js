@@ -384,7 +384,7 @@ const getInstallation = async (octokit, owner, repo, response) => {
 ///////////////////////////////////////////////
 // entrypoint
 ///////////////////////////////////////////////
-module.exports = ({app, getRouter }) => {
+module.exports = (app { addHandler }) => {
   application = app;
   // trigger to create a new deployment comment
   app.on("pull_request", async (context) => {
@@ -443,9 +443,9 @@ module.exports = ({app, getRouter }) => {
     }
   });
 
-  const router = getRouter("/snapshots");
+  //const router = getRouter("/snapshots");
 
-  router.use(require("express").json());
+  //router.use(require("express").json());
 
-  router.post("/new", newSnapshotHandler);
+  //router.post("/new", newSnapshotHandler);
 };
