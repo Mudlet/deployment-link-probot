@@ -384,7 +384,7 @@ const getInstallation = async (octokit, owner, repo, response) => {
 ///////////////////////////////////////////////
 // entrypoint
 ///////////////////////////////////////////////
-module.exports = (app, { getRouter }) => {
+module.exports = ({app, getRouter }) => {
   application = app;
   // trigger to create a new deployment comment
   app.on("pull_request", async (context) => {
