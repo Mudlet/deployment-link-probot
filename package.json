@@ -8,7 +8,7 @@
     "express": "^4.18.2",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
-    "probot": "^13.4.7",
+    "probot": "^14.2.1",
     "xmlhttprequest": "^1.8.0"
   },
   "devDependencies": {
