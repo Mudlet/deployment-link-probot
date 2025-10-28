@@ -1,6 +1,6 @@
 let application;
-const _ = require("lodash");
-const axios = require("axios");
+import * as  _ from "lodash";
+import * as axios from "axios";
 
 ///////////////////////////////////////////////
 // Utility functions for comments
@@ -396,7 +396,7 @@ const getInstallation = async (octokit, owner, repo, response) => {
 ///////////////////////////////////////////////
 // entrypoint
 ///////////////////////////////////////////////
-module.exports = (app, { addHandler }) => {
+export const appFunction = (app, { addHandler }) => {
   application = app;
   // trigger to create a new deployment comment
   app.on("pull_request", async (context) => {
