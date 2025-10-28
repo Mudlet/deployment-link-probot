@@ -335,6 +335,18 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
 // functions for handling pingbacks from the snapshots service
 ///////////////////////////////////////////////
 
+const newSnapshotMiddleware = async (request, response) => {
+  if(request.method !== "POST") {
+    return
+  }
+  const requestUrl = new URL(request.url, "http://localhost")
+  if(requestUrl.pathname !== "/snapshots"){
+    return
+  }
+  request.query = requestUrl.searchParams
+  await newSnapshotHandler(request, response)
+}
+
 const newSnapshotHandler = async (request, response) => {
   if (!validateRequest(request)) {
     response.status(400).send("Bad Request: missing parameters");
@@ -443,9 +455,5 @@ module.exports = (app, { addHandler }) => {
     }
   });
 
-  //const router = getRouter("/snapshots");
-
-  //router.use(require("express").json());
-
-  //router.post("/new", newSnapshotHandler);
+  addHandler(newSnapshotMiddleware);
 };
