@@ -9,7 +9,7 @@ const createDeploymentComment = async (context, title) => {
   const body = getCommentTemplate(title);
   // GitHub's API handles comments to PRs as comments to issues, so we use the issue context here.
   const prComment = context.issue({ body: body });
-  await context.octokit.issues.createComment(prComment);
+  await context.octokit.rest.issues.createComment(prComment);
 };
 
 const getCommentTemplate = (title) =>
@@ -446,7 +446,7 @@ export const appFunction = (app, { addHandler }) => {
         context.payload.issue.number,
         context.octokit
       );
-      await context.octokit.reactions.createForIssueComment({
+      await context.octokit.rest.reactions.createForIssueComment({
         owner: context.payload.repository.owner.login,
         repo: context.payload.repository.name,
         comment_id: context.payload.comment.id,
