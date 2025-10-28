@@ -9,6 +9,10 @@
     {
       "src": "/api/github/webhooks",
       "dest": "/api/github/webhooks.js"
+    },
+    {
+      "src": "/snapshots",
+      "dest":"/api/github/webhooks.js"
     }
   ]
 }
