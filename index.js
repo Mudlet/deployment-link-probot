@@ -348,7 +348,9 @@ const newSnapshotMiddleware = async (request, response) => {
 }
 
 const newSnapshotHandler = async (request, response) => {
+  console.log("Checkpoint: starting handler");
   if (!validateRequest(request)) {
+    console.log("Checkpoint: parameters missing");
     response.statusCode = 400;
     response.statusMessage = "Bad Request: missing parameters";
     return;
@@ -357,17 +359,25 @@ const newSnapshotHandler = async (request, response) => {
   const owner = request.query["owner"];
   const repo = request.query["repo"];
 
+  console.log("checkpoint: getting auth");
   const appOctokit = await application.auth();
+  console.log("checkpoint: getting installation");
   const installation = await getInstallation(appOctokit, owner, repo, response);
+
   if (installation === undefined) {
+    console.log("checkpoint: no install found");
     return;
   }
 
+  console.log("checkpoint: getting installation auth")
   const installationOctokit = await application.auth(installation.id);
 
   for (const prNumber of request.body) {
+    console.log("checkpoint: setting links for " + prNumber);
     await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
   }
+
+  console.log("checkpoint: done")
 
   response.statusCode = 204;
 };
