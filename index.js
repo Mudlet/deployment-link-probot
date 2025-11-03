@@ -1,6 +1,6 @@
 let application;
 import * as  _ from "lodash";
-import * as axios from "axios";
+import axios from 'axios';
 
 ///////////////////////////////////////////////
 // Utility functions for comments
