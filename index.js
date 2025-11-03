@@ -400,7 +400,7 @@ const getInstallation = async (octokit, owner, repo, response) => {
       response.statusMessage = "Not Found: app not installed to given owner and repository";
       response.end();
     } else {
-      application.log.fail(exception);
+      application.log.fatal(exception);
       response.statusCode = 500;
       response.statusMessage = `Unknown response from GitHub API: ${exception.headers.status}`;
       response.end();
