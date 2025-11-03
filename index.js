@@ -356,8 +356,8 @@ const newSnapshotHandler = async (request, response) => {
     return;
   }
 
-  const owner = request.query["owner"];
-  const repo = request.query["repo"];
+  const owner = request.query.get("owner");
+  const repo = request.query.get("repo");
 
   console.log("checkpoint: getting auth");
   const appOctokit = await application.auth();
@@ -383,7 +383,7 @@ const newSnapshotHandler = async (request, response) => {
 };
 
 const validateRequest = (request) => {
-  return request.query["owner"] !== undefined && request.query["repo"] !== undefined;
+  return request.query.get("owner") !== undefined && request.query.get("repo") !== undefined;
 };
 
 const getInstallation = async (octokit, owner, repo, response) => {
