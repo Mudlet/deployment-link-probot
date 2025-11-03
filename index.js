@@ -38,7 +38,7 @@ const getDeploymentComment = async (
   github
 ) => {
   application.log.info("retrieving comments...");
-  const commentAnswer = await github.issues.listComments({
+  const commentAnswer = await github.rest.issues.listComments({
     owner: repositoryOwner,
     repo: repositoryName,
     issue_number: prNumber,
@@ -57,7 +57,7 @@ const updateDeploymentCommentBody = async (
 ) => {
   application.log.info("Setting new comment body to:");
   application.log.info(comment.body);
-  await github.issues.updateComment({
+  await github.rest.issues.updateComment({
     owner: repoOwner,
     repo: repoName,
     comment_id: comment.id,
