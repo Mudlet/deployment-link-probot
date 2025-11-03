@@ -1,8 +1,7 @@
 {
   "functions": {
     "api/github/webhooks.js": {
-      "maxDuration": 300,
-      "fluid": true
+      "maxDuration": 300
     }
   },
   "routes": [
