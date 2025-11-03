@@ -348,38 +348,43 @@ const newSnapshotMiddleware = async (request, response) => {
 }
 
 const newSnapshotHandler = async (request, response) => {
-  console.log("Checkpoint: starting handler");
+  application.log.debug("Checkpoint: starting handler");
   if (!validateRequest(request)) {
-    console.log("Checkpoint: parameters missing");
+    application.log.debug("Checkpoint: parameters missing");
     response.statusCode = 400;
     response.statusMessage = "Bad Request: missing parameters";
+    response.end();
     return;
   }
 
   const owner = request.query.get("owner");
   const repo = request.query.get("repo");
 
-  console.log("checkpoint: getting auth");
+  application.log.debug("Checkpoint: getting auth");
   const appOctokit = await application.auth();
-  console.log("checkpoint: getting installation");
+  application.log.debug("Checkpoint: getting installation");
   const installation = await getInstallation(appOctokit, owner, repo, response);
 
   if (installation === undefined) {
-    console.log("checkpoint: no install found");
+    application.log.debug("Checkpoint: no install found");
+    response.statusCode = 500;
+    response.statusMessage = "Internal Server Error: no installation found";
+    response.end();
     return;
   }
 
-  console.log("checkpoint: getting installation auth")
+  application.log.debug("Checkpoint: getting installation auth");
   const installationOctokit = await application.auth(installation.id);
 
   for (const prNumber of request.body) {
-    console.log("checkpoint: setting links for " + prNumber);
+    application.log.debug("Checkpoint: setting links for " + prNumber);
     await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
   }
 
-  console.log("checkpoint: done")
+  application.log.debug("Checkpoint: done");
 
   response.statusCode = 204;
+  response.end();
 };
 
 const validateRequest = (request) => {
@@ -391,14 +396,14 @@ const getInstallation = async (octokit, owner, repo, response) => {
     return (await octokit.apps.getRepoInstallation({ owner, repo })).data;
   } catch (exception) {
     if (exception.status === 404) {
-      response
-        .status(404)
-        .send("app not installed to given owner and repository");
+      response.statusCode = 404;
+      response.statusMessage = "Not Found: app not installed to given owner and repository";
+      response.end();
     } else {
-      application.log(exception);
-      response
-        .status(500)
-        .send(`Unknown response from GitHub API: ${exception.headers.status}`);
+      application.log.fail(exception);
+      response.statusCode = 500;
+      response.statusMessage = `Unknown response from GitHub API: ${exception.headers.status}`;
+      response.end();
     }
     return undefined;
   }
