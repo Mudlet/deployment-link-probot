@@ -13,13 +13,16 @@ const createDeploymentComment = async (context, title) => {
 };
 
 const getCommentTemplate = (title) =>
-  "Hey there! Thanks for helping Mudlet improve. :star2:\n\n" +
-  "## Test versions\n\n" +
+  "Hey there! Thanks for helping Mudlet improve. :star2:\n" + 
+  "\n" +
+  "## Test versions\n" +
+  "\n" +
   "You can directly test the changes here:\n" +
   "- linux: (download pending, check back soon!)\n" +
   "- osx intel: (download pending, check back soon!)\n" +
   "- osx arm: (download pending, check back soon!)\n" +
   "- windows 64 bit: (download pending, check back soon!)\n" +
+  "\n" +
   "No need to install anything - just unzip and run.\n" +
   "Let us know if it works well, and if it doesn't, please give details.\n" +
   (title === "Improve: New Crowdin updates"
