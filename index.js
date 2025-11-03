@@ -348,8 +348,10 @@ const newSnapshotMiddleware = async (request, response) => {
 }
 
 const newSnapshotHandler = async (request, response) => {
+  console.log(request.query);
   if (!validateRequest(request)) {
-    response.status(400).send("Bad Request: missing parameters");
+    response.statusCode = 400;
+    response.statusMessage = "Bad Request: missing parameters";
     return;
   }
 
@@ -368,7 +370,7 @@ const newSnapshotHandler = async (request, response) => {
     await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
   }
 
-  response.status(204).send();
+  response.statusCode = 204;
 };
 
 const validateRequest = (request) => {
