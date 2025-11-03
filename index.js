@@ -43,9 +43,10 @@ const getDeploymentComment = async (
     repo: repositoryName,
     issue_number: prNumber,
   });
+  user_login = process.env.VERCEL_ENV === "production" ? "add-deployment-links-testing[bot]" : "add-deployment-links-testing[bot]"
   return _.find(
     commentAnswer.data,
-    (comment) => comment.user.login === "add-deployment-links[bot]"
+    (comment) => comment.user.login === user_login
   );
 };
 
