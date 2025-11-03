@@ -376,15 +376,31 @@ const newSnapshotHandler = async (request, response) => {
   application.log.debug("Checkpoint: getting installation auth");
   const installationOctokit = await application.auth(installation.id);
 
-  for (const prNumber of request.body) {
-    application.log.debug("Checkpoint: setting links for " + prNumber);
-    await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
-  }
+  // read full request body
+  let body = "";
+  request.on("data", (chunk) => {
+    body += chunk;
+  });
 
-  application.log.debug("Checkpoint: done");
+  request.on("end", async () => {
+    try {
+      const parsedBody = JSON.parse(body);
+      for (const prNumber of parsedBody) {
+        application.log.debug("Checkpoint: setting links for " + prNumber);
+        await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
+      }
 
-  response.statusCode = 204;
-  response.end();
+      application.log.debug("Checkpoint: done");
+
+      response.statusCode = 204;
+      response.end();
+    } catch (exception) {
+      application.log.fatal(exception);
+      response.statusCode = 500;
+      response.statusMessage = "Internal Server Error: exception occurred";
+      response.end();
+    }
+  });
 };
 
 const validateRequest = (request) => {
