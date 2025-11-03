@@ -37,7 +37,7 @@ const getDeploymentComment = async (
   prNumber,
   github
 ) => {
-  application.log("retrieving comments...");
+  application.log.info("retrieving comments...");
   const commentAnswer = await github.issues.listComments({
     owner: repositoryOwner,
     repo: repositoryName,
@@ -55,8 +55,8 @@ const updateDeploymentCommentBody = async (
   comment,
   github
 ) => {
-  application.log("Setting new comment body to:");
-  application.log(comment.body);
+  application.log.info("Setting new comment body to:");
+  application.log.info(comment.body);
   await github.issues.updateComment({
     owner: repoOwner,
     repo: repoName,
@@ -165,7 +165,7 @@ const setDeploymentLinks = async (
     return;
   }
 
-  application.log("Running for: " + prNumber);
+  application.log.info("Running for: " + prNumber);
   const links = await getMudletSnapshotLinksForPr(prNumber);
   const deploymentComment = await getDeploymentComment(
     repositoryOwner,
@@ -197,8 +197,8 @@ const setDeploymentLinks = async (
     }
     updateCommentUrl(pair.platform, pair.url, pair.commitid, deploymentComment);
   }
-  application.log("New deployment body:");
-  application.log(deploymentComment.body);
+  application.log.info("New deployment body:");
+  application.log.info(deploymentComment.body);
   updateDeploymentCommentBody(
     repositoryOwner,
     repositoryName,
@@ -224,7 +224,7 @@ const getPassedAppveyorJobs = async (
 ) => {
   const matches = targetUrl.match("/builds/(\\d+)");
   const buildId = matches[1];
-  application.log("Build ID: " + buildId);
+  application.log.info("Build ID: " + buildId);
   const response = await axios.get(
     `https://ci.appveyor.com/api/projects/${repositoryOwner}/${repositoryName.toLowerCase()}/builds/${buildId}`
   );
@@ -244,7 +244,7 @@ const getAppveyorLog = async (job) => {
 };
 
 const getTranslationStatsFromAppveyor = async (githubStatusPayload) => {
-  application.log("getting passed jobs");
+  application.log.info("getting passed jobs");
   const passedJobs = await getPassedAppveyorJobs(
     githubStatusPayload.target_url,
     githubStatusPayload.repository.owner.login,
@@ -301,7 +301,7 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
     );
 
     if (translationStats.length === 0) {
-      application.log("No translation stats found, aborting");
+      application.log.warn("No translation stats found, aborting");
       return;
     }
     const output = buildTranslationTable(translationStats);
@@ -314,7 +314,7 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
     );
 
     if (!comment) {
-      application.log("Couldn't find our comment, aborting");
+      application.log.warn("Couldn't find our comment, aborting");
       return;
     }
 
