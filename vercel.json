@@ -1,8 +1,6 @@
 {
   "functions": {
     "api/github/webhooks.js": {
-      "memory": 512,
-      "maxDuration": 10
     }
   },
   "routes": [
