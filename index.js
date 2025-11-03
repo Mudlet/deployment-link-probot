@@ -348,15 +348,14 @@ const newSnapshotMiddleware = async (request, response) => {
 }
 
 const newSnapshotHandler = async (request, response) => {
-  console.log(request.query);
   if (!validateRequest(request)) {
     response.statusCode = 400;
     response.statusMessage = "Bad Request: missing parameters";
     return;
   }
 
-  const owner = request.query.owner;
-  const repo = request.query.repo;
+  const owner = request.query["owner"];
+  const repo = request.query["repo"];
 
   const appOctokit = await application.auth();
   const installation = await getInstallation(appOctokit, owner, repo, response);
@@ -374,7 +373,7 @@ const newSnapshotHandler = async (request, response) => {
 };
 
 const validateRequest = (request) => {
-  return request.query.owner !== undefined && request.query.repo !== undefined;
+  return request.query["owner"] !== undefined && request.query["repo"] !== undefined;
 };
 
 const getInstallation = async (octokit, owner, repo, response) => {
