@@ -1,14 +1,17 @@
 {
   "functions": {
     "api/github/webhooks.js": {
-      "memory": 512,
-      "maxDuration": 10
+      "maxDuration": 300
     }
   },
   "routes": [
     {
       "src": "/api/github/webhooks",
       "dest": "/api/github/webhooks.js"
+    },
+    {
+      "src": "/snapshots",
+      "dest":"/api/github/webhooks.js"
     }
   ]
 }

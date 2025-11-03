@@ -2,13 +2,14 @@
   "name": "deployment-link-probot",
   "version": "1.0.0",
   "description": "Keep links to deployments of test versions.",
-  "main": "index.js",
+  "exports": "./index.js",
+  "type": "module",
   "dependencies": {
     "axios": "^1.10.0",
     "express": "^4.18.2",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
-    "probot": "^13.4.7",
+    "probot": "^14.2.1",
     "xmlhttprequest": "^1.8.0"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 let application;
-const _ = require("lodash");
-const axios = require("axios");
+import _ from "lodash";
+import axios from 'axios';
 
 ///////////////////////////////////////////////
 // Utility functions for comments
@@ -9,7 +9,7 @@ const createDeploymentComment = async (context, title) => {
   const body = getCommentTemplate(title);
   // GitHub's API handles comments to PRs as comments to issues, so we use the issue context here.
   const prComment = context.issue({ body: body });
-  await context.octokit.issues.createComment(prComment);
+  await context.octokit.rest.issues.createComment(prComment);
 };
 
 const getCommentTemplate = (title) =>
@@ -37,15 +37,16 @@ const getDeploymentComment = async (
   prNumber,
   github
 ) => {
-  application.log("retrieving comments...");
-  const commentAnswer = await github.issues.listComments({
+  application.log.info("retrieving comments...");
+  const commentAnswer = await github.rest.issues.listComments({
     owner: repositoryOwner,
     repo: repositoryName,
     issue_number: prNumber,
   });
+  const user_login = process.env.VERCEL_ENV === "production" ? "add-deployment-links[bot]" : "add-deployment-links-testing[bot]"
   return _.find(
     commentAnswer.data,
-    (comment) => comment.user.login === "add-deployment-links[bot]"
+    (comment) => comment.user.login === user_login
   );
 };
 
@@ -55,9 +56,9 @@ const updateDeploymentCommentBody = async (
   comment,
   github
 ) => {
-  application.log("Setting new comment body to:");
-  application.log(comment.body);
-  await github.issues.updateComment({
+  application.log.info("Setting new comment body to:");
+  application.log.info(comment.body);
+  await github.rest.issues.updateComment({
     owner: repoOwner,
     repo: repoName,
     comment_id: comment.id,
@@ -165,7 +166,7 @@ const setDeploymentLinks = async (
     return;
   }
 
-  application.log("Running for: " + prNumber);
+  application.log.info("Running for: " + prNumber);
   const links = await getMudletSnapshotLinksForPr(prNumber);
   const deploymentComment = await getDeploymentComment(
     repositoryOwner,
@@ -197,8 +198,8 @@ const setDeploymentLinks = async (
     }
     updateCommentUrl(pair.platform, pair.url, pair.commitid, deploymentComment);
   }
-  application.log("New deployment body:");
-  application.log(deploymentComment.body);
+  application.log.info("New deployment body:");
+  application.log.info(deploymentComment.body);
   updateDeploymentCommentBody(
     repositoryOwner,
     repositoryName,
@@ -224,7 +225,7 @@ const getPassedAppveyorJobs = async (
 ) => {
   const matches = targetUrl.match("/builds/(\\d+)");
   const buildId = matches[1];
-  application.log("Build ID: " + buildId);
+  application.log.info("Build ID: " + buildId);
   const response = await axios.get(
     `https://ci.appveyor.com/api/projects/${repositoryOwner}/${repositoryName.toLowerCase()}/builds/${buildId}`
   );
@@ -244,7 +245,7 @@ const getAppveyorLog = async (job) => {
 };
 
 const getTranslationStatsFromAppveyor = async (githubStatusPayload) => {
-  application.log("getting passed jobs");
+  application.log.info("getting passed jobs");
   const passedJobs = await getPassedAppveyorJobs(
     githubStatusPayload.target_url,
     githubStatusPayload.repository.owner.login,
@@ -301,7 +302,7 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
     );
 
     if (translationStats.length === 0) {
-      application.log("No translation stats found, aborting");
+      application.log.warn("No translation stats found, aborting");
       return;
     }
     const output = buildTranslationTable(translationStats);
@@ -314,7 +315,7 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
     );
 
     if (!comment) {
-      application.log("Couldn't find our comment, aborting");
+      application.log.warn("Couldn't find our comment, aborting");
       return;
     }
 
@@ -335,47 +336,91 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
 // functions for handling pingbacks from the snapshots service
 ///////////////////////////////////////////////
 
+const newSnapshotMiddleware = async (request, response) => {
+  if(request.method !== "POST") {
+    return
+  }
+  const requestUrl = new URL(request.url, "http://localhost")
+  if(requestUrl.pathname !== "/snapshots"){
+    return
+  }
+  request.query = requestUrl.searchParams
+  await newSnapshotHandler(request, response)
+}
+
 const newSnapshotHandler = async (request, response) => {
+  application.log.debug("Checkpoint: starting handler");
   if (!validateRequest(request)) {
-    response.status(400).send("Bad Request: missing parameters");
+    application.log.debug("Checkpoint: parameters missing");
+    response.statusCode = 400;
+    response.statusMessage = "Bad Request: missing parameters";
+    response.end();
     return;
   }
 
-  const owner = request.query.owner;
-  const repo = request.query.repo;
+  const owner = request.query.get("owner");
+  const repo = request.query.get("repo");
 
+  application.log.debug("Checkpoint: getting auth");
   const appOctokit = await application.auth();
+  application.log.debug("Checkpoint: getting installation");
   const installation = await getInstallation(appOctokit, owner, repo, response);
+
   if (installation === undefined) {
+    application.log.debug("Checkpoint: no install found");
+    response.statusCode = 500;
+    response.statusMessage = "Internal Server Error: no installation found";
+    response.end();
     return;
   }
 
+  application.log.debug("Checkpoint: getting installation auth");
   const installationOctokit = await application.auth(installation.id);
 
-  for (const prNumber of request.body) {
-    await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
-  }
+  // read full request body
+  let body = "";
+  request.on("data", (chunk) => {
+    body += chunk;
+  });
 
-  response.status(204).send();
+  request.on("end", async () => {
+    try {
+      const parsedBody = JSON.parse(body);
+      for (const prNumber of parsedBody) {
+        application.log.debug("Checkpoint: setting links for " + prNumber);
+        await setDeploymentLinks(owner, repo, prNumber, installationOctokit);
+      }
+
+      application.log.debug("Checkpoint: done");
+
+      response.statusCode = 204;
+      response.end();
+    } catch (exception) {
+      application.log.fatal(exception);
+      response.statusCode = 500;
+      response.statusMessage = "Internal Server Error: exception occurred";
+      response.end();
+    }
+  });
 };
 
 const validateRequest = (request) => {
-  return request.query.owner !== undefined && request.query.repo !== undefined;
+  return request.query.get("owner") !== undefined && request.query.get("repo") !== undefined;
 };
 
 const getInstallation = async (octokit, owner, repo, response) => {
   try {
-    return (await octokit.apps.getRepoInstallation({ owner, repo })).data;
+    return (await octokit.rest.apps.getRepoInstallation({ owner, repo })).data;
   } catch (exception) {
     if (exception.status === 404) {
-      response
-        .status(404)
-        .send("app not installed to given owner and repository");
+      response.statusCode = 404;
+      response.statusMessage = "Not Found: app not installed to given owner and repository";
+      response.end();
     } else {
-      application.log(exception);
-      response
-        .status(500)
-        .send(`Unknown response from GitHub API: ${exception.headers.status}`);
+      application.log.fatal(exception);
+      response.statusCode = 500;
+      response.statusMessage = `Unknown response from GitHub API: ${exception.headers.status}`;
+      response.end();
     }
     return undefined;
   }
@@ -384,7 +429,7 @@ const getInstallation = async (octokit, owner, repo, response) => {
 ///////////////////////////////////////////////
 // entrypoint
 ///////////////////////////////////////////////
-module.exports = (app, { getRouter }) => {
+export const appFunction = (app, { addHandler }) => {
   application = app;
   // trigger to create a new deployment comment
   app.on("pull_request", async (context) => {
@@ -434,7 +479,7 @@ module.exports = (app, { getRouter }) => {
         context.payload.issue.number,
         context.octokit
       );
-      await context.octokit.reactions.createForIssueComment({
+      await context.octokit.rest.reactions.createForIssueComment({
         owner: context.payload.repository.owner.login,
         repo: context.payload.repository.name,
         comment_id: context.payload.comment.id,
@@ -443,9 +488,5 @@ module.exports = (app, { getRouter }) => {
     }
   });
 
-  const router = getRouter("/snapshots");
-
-  router.use(require("express").json());
-
-  router.post("/new", newSnapshotHandler);
+  addHandler(newSnapshotMiddleware);
 };
