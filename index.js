@@ -393,7 +393,7 @@ const validateRequest = (request) => {
 
 const getInstallation = async (octokit, owner, repo, response) => {
   try {
-    return (await octokit.apps.getRepoInstallation({ owner, repo })).data;
+    return (await octokit.rest.apps.getRepoInstallation({ owner, repo })).data;
   } catch (exception) {
     if (exception.status === 404) {
       response.statusCode = 404;
