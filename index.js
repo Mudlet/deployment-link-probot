@@ -91,6 +91,11 @@ const translatePlatform = (platform) => {
   return platform;
 };
 
+// macOS ships two build variants that each need their own latest link - taking
+// the two newest links overall would return two builds of the same variant (and
+// thus an outdated link) whenever one variant is missing.
+const osxVariants = [/x86_64/, /arm64/];
+
 const getMudletSnapshotLinksForPr = async (prNumber) => {
   const apiResponse = await axios.get(
     `https://make.mudlet.org/snapshots/json.php?prid=${prNumber}`
@@ -127,16 +132,15 @@ const getMudletSnapshotLinksForPr = async (prNumber) => {
         }
       })
     )
-    // for windows, take the two latest links: windows-64 and windows-32
-    // for osx, take the two latest links of x86_64 and arm64
+    // for osx, take the latest link of each variant. The list is sorted newest
+    // first, so the first match is the latest build of that variant.
     .mapValues((value, platform) => {
-      if (platform === "windows") {
-        return value
-          .filter((val) => /windows-64|windows-32/.test(val.url))
-          .slice(0, 2);
-      }
       if (platform === "osx") {
-        return value.filter((val) => /x86_64|arm64/.test(val.url)).slice(0, 2);
+        return _.compact(
+          osxVariants.map((variant) =>
+            value.find((val) => variant.test(val.url))
+          )
+        );
       }
       // for other platforms, take only the latest link
       return value[0] ? [value[0]] : [];
@@ -200,7 +204,7 @@ const setDeploymentLinks = async (
   }
   application.log.info("New deployment body:");
   application.log.info(deploymentComment.body);
-  updateDeploymentCommentBody(
+  await updateDeploymentCommentBody(
     repositoryOwner,
     repositoryName,
     deploymentComment,
@@ -323,7 +327,7 @@ const createTranslationStatistics = async (github, githubStatusPayload) => {
       translationStatReplacementRegex,
       output
     ); // on non-translation PRs, this doesn't replace anything as the block is not added
-    updateDeploymentCommentBody(
+    await updateDeploymentCommentBody(
       githubStatusPayload.repository.owner.login,
       githubStatusPayload.repository.name,
       comment,
