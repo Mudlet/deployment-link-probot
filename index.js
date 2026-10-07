@@ -19,7 +19,6 @@ const getCommentTemplate = (title) =>
   "\n" +
   "You can directly test the changes here:\n" +
   "- linux: (download pending, check back soon!)\n" +
-  "- osx intel: (download pending, check back soon!)\n" +
   "- osx arm: (download pending, check back soon!)\n" +
   "- windows 64 bit: (download pending, check back soon!)\n" +
   "\n" +
@@ -91,10 +90,8 @@ const translatePlatform = (platform) => {
   return platform;
 };
 
-// macOS ships two build variants that each need their own latest link - taking
-// the two newest links overall would return two builds of the same variant (and
-// thus an outdated link) whenever one variant is missing.
-const osxVariants = [/x86_64/, /arm64/];
+// macOS builds are published for both Intel and ARM, but we only link the ARM one.
+const osxArmBuild = /arm64/;
 
 const getMudletSnapshotLinksForPr = async (prNumber) => {
   const apiResponse = await axios.get(
@@ -132,18 +129,14 @@ const getMudletSnapshotLinksForPr = async (prNumber) => {
         }
       })
     )
-    // for osx, take the latest link of each variant. The list is sorted newest
-    // first, so the first match is the latest build of that variant.
+    // take only the latest link. For osx, only consider ARM builds - the list is
+    // sorted newest first, so the first match is the latest ARM build.
     .mapValues((value, platform) => {
-      if (platform === "osx") {
-        return _.compact(
-          osxVariants.map((variant) =>
-            value.find((val) => variant.test(val.url))
-          )
-        );
-      }
-      // for other platforms, take only the latest link
-      return value[0] ? [value[0]] : [];
+      const latest =
+        platform === "osx"
+          ? value.find((val) => osxArmBuild.test(val.url))
+          : value[0];
+      return latest ? [latest] : [];
     })
     // remove undefined values
     .filter((value) => value !== undefined)
@@ -187,21 +180,12 @@ const setDeploymentLinks = async (
       pair.platform = "windows 64 bit";
     }
     if (pair.platform === "osx") {
-      if (/x86_64/.test(pair.url)) {
-        //TODO support for "legacy" PRs with only one osx platform entry. remove when these are rolled through
-        updateCommentUrl(
-          pair.platform,
-          pair.url,
-          pair.commitid,
-          deploymentComment
-        );
-        pair.platform = "osx intel";
-      } else if (/arm64/.test(pair.url)) {
-        pair.platform = "osx arm";
-      }
+      pair.platform = "osx arm";
     }
     updateCommentUrl(pair.platform, pair.url, pair.commitid, deploymentComment);
   }
+  // comments created before we dropped Intel builds still carry an "osx intel" line
+  deploymentComment.body = deploymentComment.body.replace(/^- osx intel: .*\r?\n/m, "");
   application.log.info("New deployment body:");
   application.log.info(deploymentComment.body);
   await updateDeploymentCommentBody(
